@@ -77,9 +77,8 @@ def inconsistent_desig_same_wdpaid(wdpa_df, return_pid=False):
     '''
 
     '''
-
     check_attributes = 'DESIG'
-    return inconsistent_attributes_same_wdpaid(wdpa_df, return_pid, check_attributes)
+    return inconsistent_attributes_same_wdpaid(wdpa_df, check_attributes, return_pid)
 
 def inconsistent_desig_eng_same_wdpaid(wdpa_df, return_pid=False):
     return
@@ -87,10 +86,10 @@ def inconsistent_desig_eng_same_wdpaid(wdpa_df, return_pid=False):
 def inconsistent_name_same_wdpaid(wdpa_df, return_pid=False):
     return
 
-def inconsistent_mang_auth_wdpaid(wdpa_df, return_pid=False):
+def inconsistent_mang_auth_same_wdpaid(wdpa_df, return_pid=False):
     return
 
-def inconsistent_plan_wdpaid(wdpa_df, return_pid=False):
+def inconsistent_mang_plan_same_wdpaid(wdpa_df, return_pid=False):
     return
 
 
