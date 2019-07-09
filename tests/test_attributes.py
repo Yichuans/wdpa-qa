@@ -65,12 +65,6 @@ data2 = [[40463.0, 40463.0, u'12', u'Agoro - Agu', u'Agoro - Agu',
         u'State Verified', 1708, u'Not Reported', u'UGA', u'UGA']
         ]
 
-fields = [u'WDPAID', u'WDPA_PID', u'PA_DEF', u'NAME', u'ORIG_NAME', u'DESIG',
-       u'DESIG_ENG', u'DESIG_TYPE', u'IUCN_CAT', u'INT_CRIT', u'MARINE',
-       u'REP_M_AREA', u'GIS_M_AREA', u'REP_AREA', u'GIS_AREA', u'NO_TAKE',
-       u'NO_TK_AREA', u'STATUS', u'STATUS_YR', u'GOV_TYPE', u'OWN_TYPE',
-       u'MANG_AUTH', u'MANG_PLAN', u'VERIF', u'METADATAID', u'SUB_LOC',
-       u'PARENT_ISO3', u'ISO3']
 
 data3 = [
         [315109.0, 315109.0, u'1', u'Atiya', u'Atiya', u'Forest Reserve',
