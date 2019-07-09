@@ -26,31 +26,169 @@ def arcgis_table_to_df(in_fc, input_fields, query=""):
 # wdpa_df = arcgis_table_to_df(wdpa, fields)
 
 
-# utility function: find rows of the WDPA based on the WDPA_PID
+# == Utility ==
+# find rows of the WDPA based on the WDPA_PID
 def find_wdpa_rows(wdpa_df, wdpa_pid):
+    '''
+    Return a subset of dataframe based on wdpa_pid list
+
+    Arguments:
+    wdpa_df -- wdpa dataframe
+    wdpa_pid -- a list of WDPA_PID
+    '''
     return wdpa_df[wdpa_df['WDPA_PID'].isin(wdpa_pid)]
 
 
-# 1,2 check: if WDPA_PID unique
-def check_unique_wdpa_pid(wdpa_df):
-    return wdpa_df['WDPA_PID'].nunique() == wdpa_df.index.size
+# == Check ==
+# check validality should be implemented as efficiently as possible, to avoid having to pull out all 'offending' rows when return_pid is set to true
 
-# 3 check: PA_DEF should all be 1
-def check_pd_def_1(wdpa_df):
-    pa_def = wdpa_df['PA_DEF'].unique()
-    if pa_def.size == 1 and pa_def[0] == '1':
-        return True
-    else:
-        return False
+def duplicate_wdpa_pid(wdpa_df, return_pid=False):
+    '''
+    Return True if WDPA_PID is duplicate in the dataframe. 
+    
+    Return list of WDPAID_PID, if duplicates are present and return_pid is set True, 
+    '''
 
-# 4 validation: for each WDPAID, cannot have more than 1 DESIG, find wdpa_pid
-def wdpaid_desig(wdpa_df):
-    wdpaid_desig_unique_count = wdpa_df.groupby('WDPAID').DESIG.nunique()
+    if return_pid:
+        pid_list = list()
 
-    wdpa_pid = wdpa_df[wdpa_df['WDPAID'].isin(wdpaid_desig_unique_count[wdpaid_desig_unique_count>1].index)]['WDPA_PID']
-    return wdpa_pid
+        # AP return PID
+        
+        return pid_list
 
-# 5 validation
-def desig_type_desig(wdpa_df):
-    # AP:
-    return wdpa_pid
+    return wdpa_df['WDPA_PID'].nunique() != wdpa_df.index.size
+
+# == inconsistent values for the same WDPAID ==
+
+def inconsistent_attributes_same_wdpaid(wdpa_df, check_attribute, return_pid=False):
+    '''
+    Return True if inconsistent attributes are found for rows sharing the same WDPAID
+
+    Return list of WDPA_PID where inconsistency occurs, if return_pid is set True
+
+    Arguments:
+    check_attributes -- list of attributes to check inconsistency
+    '''
+
+    # this function can be repurposed
+    return 
+
+def inconsistent_desig_same_wdpaid(wdpa_df, return_pid=False):
+    '''
+
+    '''
+
+    check_attributes = 'DESIG'
+    return inconsistent_attributes_same_wdpaid(wdpa_df, return_pid, check_attributes)
+
+def inconsistent_desig_eng_same_wdpaid(wdpa_df, return_pid=False):
+    return
+
+def inconsistent_name_same_wdpaid(wdpa_df, return_pid=False):
+    return
+
+def inconsistent_mang_auth_wdpaid(wdpa_df, return_pid=False):
+    return
+
+def inconsistent_plan_wdpaid(wdpa_df, return_pid=False):
+    return
+
+
+# == invalid values identified in the field ==
+
+def invalid_value_in_field(wdpa_df, field, field_allowed_values, condition, return_pid=False):
+    '''
+    Return True if invalid values are found in field rows sharing the same WDPAID
+
+    Return list of WDPA_PID where inconsistency occurs, if return_pid is set True
+
+    Arguments:
+    field -- in which invalid values are checked
+    field_allowed_values -- expected values, case sensitive
+    condition -- a constraint of another field for evaluating invalid value , leave "" if no condition specified
+
+    Example:
+    invalid_value_in_field(wdpa_df, 'DESIG_ENG',
+    field_allowed_values=["Ramsar Site, Wetland of International Importance", "UNESCO-MAB Biosphere Reserve", "World Heritage Site (natural or mixed],
+    condition=("DESIG_TYPE", "International"), 
+    return_pid=True)
+    '''
+    # This generic function can be repurposed to specific functions
+
+    return
+
+def invalid_iucn_cat(wdpa_df, return_pid=False):
+    
+    field = 'IUCN_CAT'
+    field_allowed_values = ["Ia", "Ib", "II", "III", "IV", "V", "VI", "Not Reported", "Not Applicable", "Not Assigned"]
+    condition = ''
+
+    return invalid_value_in_field(wdpa_df, field, field_allowed_values, condition, return_pid)
+
+def invalid_pa_def(wdpa_df, return_pid=False):
+    '''
+    Return True if PA_DEF not 1
+
+    Return list of WDPA_PID where PA_DEF is not 1, if return_pid is set True
+
+    '''
+    field = 'PA_DEF'
+    field_allowed_values = [1]
+    condition = ''
+
+    return invalid_value_in_field(wdpa_df, field, field_allowed_values, condition, return_pid)
+
+def invalid_desig_type(wdpa_df, return_pid=False):
+    return
+
+def invalid_desig_eng_regional(wdpa_df, return_pid=False):
+    return
+
+def invalid_desig_eng_international(wdpa_df, return_pid=False):
+    return
+
+def invalid_desig_eng_int_crit(wdpa_df, return_pid=False):
+    return
+
+def invalid_marine(wdpa_df, return_pid=False):
+    return
+
+def invalid_status(wdpa_df, return_pid=False):
+    return
+
+def invalid_status_yr(wdpa_df, return_pid=False):
+    return
+
+def invalid_gov_type(wdpa_df, return_pid=False):
+    return
+
+def invalid_own_type(wdpa_df, return_pid=False):
+    return
+
+def invalid_verif(wdpa_df, return_pid=False):
+    return
+
+def invalid_metadataid(wdpa_df, return_pid=False):
+    return
+
+def invalid_gis_area(wdpa_df, return_pid=False):
+    '''
+    Return list of WDPA_PID where value small GIS_AREA are present 
+    '''
+    return 
+
+def invalid_int_crit(wdpa_df, return_pid=False):
+    '''
+    Return list of WDPA_PID where invalid characters (space, comma), are present 
+    '''   
+    return
+
+# == Marine ==
+# hard code the rules for marine fields
+def invalid_marine_areas(wdpa_df, return_pid=False):
+    # all areal inconsistency to be pickup here and specified
+    return
+
+def invalid_no_take(wdpa_df, return_pid=False):
+    # no take and no take are
+    return
