@@ -235,6 +235,21 @@ Find WDPA_PIDs whose `VERIF` is unequal to:
 
 Find WDPA_PIDs whose `METADATAID` is not found in the Source Table.
 
+#### 4.3.s. Invalid PARENT_ISO3
+
+Find WDPA_PIDs whose `ISO3` is not an allowed value.
+The list of allowed values is obtained from GitHub, where a user maintains the ISO-3166. 
+
+Links: 
+
+- [official repository](https://github.com/lukes/ISO-3166-Countries-with-Regional-Codes/blob/master/all/all.csv)
+- [raw data](https://raw.githubusercontent.com/lukes/ISO-3166-Countries-with-Regional-Codes/master/all/all.csv)
+
+#### 4.3.t. Invalid ISO3
+
+Find WDPA_PIDs whose `ISO3` is not an allowed value. 
+The list of allowed values, and the method to obtain them, is identical to that of `4.3.s. Invalid PARENT_ISO3`.
+
 ### 4.4. Area invalid size
 
 **Rule**: certain areas cannot be larger than other areas. Output the `WDPA_PIDs` that do not adhere to this rule.
