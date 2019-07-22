@@ -1,0 +1,326 @@
+## 4. Checks
+
+### 4.1. Find duplicate WDPA_PIDs
+
+**Rule**: `WDPA_PIDs` must be unique in the entire WDPA. Output the `WDPA_PIDs` that do not adhere to this rule.
+
+### 4.2. Find inconsistent fields for the same WDPAID
+
+**Rule**: if the `WDPAID` is the same among a group of `WDPA_PID`s, then related fields (e.g. `ISO3` or `DESIG_ENG`) must be the same for the entire group. Output the WDPA_PIDs that do not adhere to this rule.
+
+#### 4.2.a. Inconsistent `NAME`
+
+Find WDPA_PIDs that share the same WDPAID, but have inconsistencies in field `NAME`.
+
+#### 4.2.b. Inconsistent `ORIG_NAME`
+
+Find WDPA_PIDs that share the same WDPAID, but have inconsistencies in field `ORIG_NAME`.
+
+#### 4.2.c. Inconsistent `DESIG`
+
+Find WDPA_PIDs that share the same WDPAID, but have inconsistencies in field `DESIG`.
+
+#### 4.2.d. Inconsistent `DESIG_ENG`
+
+Find WDPA_PIDs that share the same WDPAID, but have inconsistencies in field `DESIG_ENG`.
+
+#### 4.2.e. Inconsistent `DESIG_TYPE`
+
+Find WDPA_PIDs that share the same WDPAID, but have inconsistencies in field `DESIG_TYPE`.
+
+#### 4.2.f. Inconsistent `IUCN_CAT`
+
+Find WDPA_PIDs that share the same WDPAID, but have inconsistencies in field `IUCN_CAT`.
+
+#### 4.2.g. Inconsistent `INT_CRIT`
+
+Find WDPA_PIDs that share the same WDPAID, but have inconsistencies in field `INT_CRIT`.
+
+#### 4.2.h. Inconsistent `NO_TAKE`
+
+Find WDPA_PIDs that share the same WDPAID, but have inconsistencies in field `NO_TAKE`.
+
+#### 4.2.i. Inconsistent `STATUS`
+
+Find WDPA_PIDs that share the same WDPAID, but have inconsistencies in field `STATUS`.
+
+#### 4.2.j. Inconsistent `STATUS_YR`
+
+Find WDPA_PIDs that share the same WDPAID, but have inconsistencies in field `STATUS_YR`.
+
+#### 4.2.k. Inconsistent `GOV_TYPE`
+
+Find WDPA_PIDs that share the same WDPAID, but have inconsistencies in field `GOV_TYPE`.
+
+#### 4.2.l. Inconsistent `OWN_TYPE`
+
+Find WDPA_PIDs that share the same WDPAID, but have inconsistencies in field `OWN_TYPE`.
+
+#### 4.2.m. Inconsistent `MANG_AUTH`
+
+Find WDPA_PIDs that share the same WDPAID, but have inconsistencies in field `MANG_AUTH`.
+
+#### 4.2.n. Inconsistent `MANG_PLAN`
+
+Find WDPA_PIDs that share the same WDPAID, but have inconsistencies in field `MANG_PLAN`.
+
+#### 4.2.o. Inconsistent `VERIF`
+
+Find WDPA_PIDs that share the same WDPAID, but have inconsistencies in field `VERIF`.
+
+#### 4.2.p. Inconsistent `METADATAID`
+
+Find WDPA_PIDs that share the same WDPAID, but have inconsistencies in field `METADATAID`.
+
+#### 4.2.q. Inconsistent `SUB_LOC`
+
+Find WDPA_PIDs that share the same WDPAID, but have inconsistencies in field `SUB_LOC`.
+
+#### 4.2.r. Inconsistent `PARENT_ISO3`
+
+Find WDPA_PIDs that share the same WDPAID, but have inconsistencies in field `PARENT_ISO3`.
+
+#### 4.2.s. Inconsistent `ISO3`
+
+Find WDPA_PIDs that share the same WDPAID, but have inconsistencies in field `ISO3`.
+
+### 4.3 Find invalid values in fields
+
+**Rule**: for a number of fields, only a set number of values are allowed. Output the WDPA_PIDs that do not adhere to this rule.
+
+#### 4.3.a. Invalid `PA_DEF`
+
+Find WDPA_PIDs that have a value unequal to 1 in field `PA_DEF`.
+
+#### 4.3.b. Invalid `DESIG_ENG` - international
+
+Find WDPA_PIDs whose `DESIG_ENG` is unequal to:
+
+- Ramsar Site, Wetland of International Importance
+- UNESCO-MAB Biosphere Reserve
+- World Heritage Site (natural or mixed)
+
+While `DESIG_TYPE` = 'International'
+
+#### 4.3.c. Invalid DESIG_ENG - regional
+
+Find WDPA_PIDs whose `DESIG_ENG` is unequal to:
+
+- Baltic Sea Protected Area (HELCOM) 
+- Specially Protected Area (Cartagena Convention) 
+- Marine Protected Area (CCAMLR) 
+- Marine Protected Area (OSPAR)
+- Site of Community Importance (Habitats Directive)
+- Special Protection Area (Birds Directive)
+- Specially Protected Areas of Mediterranean Importance (Barcelona Convention)
+
+While `DESIG_TYPE` = 'Regional'
+
+#### 4.3.d. Invalid INT_CRIT & DESIG_ENG  - Ramsar Site & World Heritage Sites
+
+Find WDPA_PIDs whose `INT_CRIT` is unequal to the allowed values specified in the function
+
+While `DESIG_ENG` = 
+
+- Ramsar Site, Wetland of International Importance; or 
+- World Heritage Site (natural or mixed)
+
+Allowed values include all combinations of '(i)' through '(x); possible, all of which are generated inside this function with the help of package `itertools`. Moreover, 'Not Reported' is an allowed value.
+
+#### 4.3.e. Invalid DESIG_TYPE
+
+Find WDPA_PIDs whose `DESIG_TYPE` is unequal to:
+
+- National
+- Regional
+- International
+- Not Applicable
+
+#### 4.3.f. Invalid IUCN_CAT
+
+Find WDPA_PIDs whose `IUCN_CAT` is unequal to:
+
+- Ia
+- Ib
+- II
+- III
+- IV
+- V
+- VI
+- Not Reported
+- Not Applicable
+- Not Assigned
+
+#### 4.3.g. Invalid IUCN_CAT & DESIG_ENG - UNESCO-MAB & World Heritage Sites
+
+Find WDPA_PIDs whose `IUCN_CAT` is unequal to:
+
+- UNESCO-MAB Biosphere Reserve
+- World Heritage Site (natural or mixed)
+
+While `IUCN_CAT` = Not Applicable
+
+'Not Applicable' is only allowed for UNESCO-MAB and World Heritage Sites.
+
+#### 4.3.h. Invalid MARINE
+
+Find WDPA_PIDs whose `MARINE` is unequal to 0, 1, or 2.
+
+#### 4.3.i. Invalid NO_TAKE & MARINE = 0
+
+Find WDPA_PIDs whose `NO_TAKE` is unequal to 'Not Applicable' while `MARINE` = 0.
+
+`NO_TAKE` can only be anything else than 'Not Applicable' if `MARINE` = 1 or 2.
+
+#### 4.3.j. Invalid NO_TAKE & MARINE = [1,2]
+
+Find WDPA_PIDs whose `NO_TAKE` is unequal to 'All', 'Part', 'None', or 'Not Reported' while `MARINE` = 1 or 2.
+
+#### 4.3.k. Invalid NO_TK_AREA & MARINE
+
+Find WDPA_PIDs whose `NO_TK_AREA` is unequal to 0 while `MARINE` = 0.
+
+#### 4.3.l. Invalid NO_TK_AREA & NO_TAKE
+
+Find WDPA_PIDs whose 'NO_TK_AREA' is unequal to 0 while `NO_TAKE` is 'Not Applicable'.
+
+#### 4.3.m. Invalid STATUS
+
+Find WDPA_PIDs whose `STATUS` is unequal to 'Proposed', 'Inscribed', 'Adopted', 'Designation', or 'Established'.
+
+#### 4.3.n. Invalid STATUS_YR
+
+Find WDPA_PIDs whose `STATUS_YR` is unequal to any year between 1819 and the present year, or 0.
+
+#### 4.3.o. Invalid GOV_TYPE
+
+Find WDPA_PIDs whose `GOV_TYPE` is unequal to: 
+
+- Federal or national ministry or agency 
+- Sub-national ministry or agency
+- Government-delegated management
+- Transboundary governance
+- Collaborative governance
+- Joint governance
+- Individual landowners
+- Non-profit organisations
+- For-profit organisations
+- Indigenous peoples
+- Local communities
+- Not Reported
+
+#### 4.3.p. Invalid OWN_TYPE
+
+Find WDPA_PIDs whose `OWN_TYPE` is unequal to: 
+
+- State
+- Communal
+- Individual landowners
+- For-profit organisations
+- Non-profit organisations
+- Joint ownership
+- Multiple ownership
+- Contested
+- Not Reported
+
+#### 4.3.q. Invalid VERIF
+
+Find WDPA_PIDs whose `VERIF` is unequal to:
+
+- State Verified
+- Expert Verified
+- Not Reported
+
+#### 4.3.r. Invalid METADATAID
+
+Find WDPA_PIDs whose `METADATAID` is not found in the Source Table.
+
+### 4.4. Area invalid size
+
+**Rule**: certain areas cannot be larger than other areas. Output the `WDPA_PIDs` that do not adhere to this rule.
+
+#### 4.4.a. Area invalid: NO_TK_AREA and REP_M_AREA
+
+Find WDPA_PIDs whose `NO_TK_AREA` is larger than its `REP_M_AREA`. 
+
+#### 4.4.b. Area invalid: NO_TK_AREA and GIS_M_AREA
+
+Find WDPA_PIDs whose `NO_TK_AREA` is larger than its `GIS_M_AREA`. 
+
+#### 4.4.c. Area invalid: GIS_M_AREA and GIS_AREA
+
+Find WDPA_PIDs whose `GIS_M_AREA` is larger than its `GIS_AREA`. 
+
+#### 4.4.d. Area invalid: REP_M_AREA and REP_AREA
+
+Find WDPA_PIDs whose `REP_M_AREA` is larger than its `REP_AREA`. 
+
+### 4.5. Miscellaneous, hardcoded checks
+
+**Not single rule**: this section contains checks for multiple rules that could not be implemented using the same logic that is used in the functions described above.
+
+#### 4.5.a. Invalid MARINE designation based on GIS area
+
+Find WDPA_PIDs that have a `MARINE`designation (0, 1, 2) that does not correspond with the proportion of `GIS_ARE` to `GIS_M_AREA` for that WDPA_PID.
+
+#### 4.5.b. Invalid: GIS_AREA >> REP_AREA
+
+Find WDPA_PIDs that have a `GIS_AREA` that is much larger than the `REP_AREA`. 
+
+To determine whether the `GIS_AREA` is sufficiently larger than the `REP_AREA`, first a ratio is calculated as per the following: (`GIS_AREA` + `REP_AREA`) / `REP_AREA` for each WDPA_PID.
+
+Subsequently, the mean and standard deviation of this ratio are obtained for the entire WDPA. Then, each WDPA_PID is evaluated whether it falls within a certain range. This lower limit is set at the mean minus 2 * standard deviation; the upper limit is set at the mean plus 2 * standard deviation. WDPA_PIDs that fall outside of this range are filtered. Moreover, the minimum absolute difference between the `GIS_AREA` and `REP_AREA` needs to be 50 km².
+
+#### 4.5.c. Invalid: REP_AREA >> GIS_AREA
+
+Find WDPA_PIDs that have a `REP_AREA` that is much larger than the `GIS_AREA`. 
+
+To determine whether the REP_AREA is sufficiently larger than the GIS_AREA, first a ratio is calculated as per the following: (`GIS_AREA` + `REP_AREA`) / `GIS_AREA` for each WDPA_PID.
+
+Subsequently, the mean and standard deviation of this ratio are obtained for the entire WDPA. Then, each WDPA_PID is evaluated whether it falls within a certain range. This lower limit is set at the mean minus 2 * standard deviation; the upper limit is set at the mean plus 2 * standard deviation. WDPA_PIDs that fall outside of this range are filtered. Moreover, the minimum absolute difference between the `GIS_AREA` and `REP_AREA` needs to be 50 km².
+
+#### 4.5.d. Invalid: GIS_M_AREA >> REP_M_AREA
+
+Find WDPA_PIDs that have a `GIS_M_AREA` that is much larger than the `REP_M_AREA`. 
+
+To determine whether the `GIS_M_AREA` is sufficiently larger than the `REP_M_AREA`, first a ratio is calculated as per the following: (`GIS_M_AREA` + `REP_M_AREA`) / `REP_M_AREA` for each WDPA_PID.
+
+Subsequently, the mean and standard deviation of this ratio are obtained for the entire WDPA. Then, each WDPA_PID is evaluated whether it falls within a certain range. This lower limit is set at the mean minus 2 * standard deviation; the upper limit is set at the mean plus 2 * standard deviation. WDPA_PIDs that fall outside of this range are filtered. Moreover, the minimum absolute difference between the `GIS_M_AREA` and `REP_M_AREA` needs to be 50 km².
+
+#### 4.5.e. Invalid: REP_M_AREA >> GIS_M_AREA
+
+Find WDPA_PIDs that have a `REP_M_AREA` that is much larger than the `GIS_M_AREA`. 
+
+To determine whether the `REP_M_AREA` is sufficiently larger than the `GIS_M_AREA`, first a ratio is calculated as per the following: (`GIS_M_AREA` + `REP_M_AREA`) / `GIS_M_AREA` for each WDPA_PID.
+
+Subsequently, the mean and standard deviation of this ratio are obtained for the entire WDPA. Then, each WDPA_PID is evaluated whether it falls within a certain range. This lower limit is set at the mean minus 2 * standard deviation; the upper limit is set at the mean plus 2 * standard deviation. WDPA_PIDs that fall outside of this range are filtered. Moreover, the minimum absolute difference between the `GIS_M_AREA` and `REP_M_AREA` needs to be 50 km².
+
+#### 4.5.f. Invalid: GIS_AREA <= 0.0001 km² (100 m²)
+
+Find WDPA_PIDs whose `GIS_AREA` is smaller than 0.0001 km² (100 m²). Protected Areas this small are questionable.
+
+#### 4.5.g. Invalid: REP_M_AREA <= 0 when MARINE = 1 or 2
+
+Find WDPA_PIDs whose `REP_M_AREA` is smaller than or equal to 0, while `MARINE` = 1 or 2.
+
+#### 4.5.h. Invalid: GIS_M_AREA <= 0 when MARINE = 1 or 2
+
+Find WDPA_PIDs whose `GIS_M_AREA` is smaller than or equal to 0, while `MARINE` = 1 or 2.
+
+#### 4.5.i. Invalid: NO_TAKE, NO_TK_AREA and REP_M_AREA
+
+Find WDPA_PIDs whose `NO_TAKE` = ' All' while the `REP_M_AREA` is unequal to `NO_TK_AREA`. 
+
+if the no-take zone in a marine area is supposed to encompass all marine area, then the REP_M_AREA cannot be different from the NO_TK_AREA.
+
+#### 4.5.j. Invalid: INT_CRIT & DESIG_ENG - non-Ramsar Site, non-WHS sites
+
+Find WDPA_PIDs whose `DESIG_ENG` is unequal to 'Ramsar Site (...)' or 'World Heritage Site (...)' and the `INT_CRIT` is unequal to 'Not Applicable'.
+
+This captures all sites that have an `INT_CRIT` designation while they are not a Ramsar site or a WHS. 
+
+#### 4.5.k. Invalid: DESIG_ENG & IUCN_CAT - non-UNESCO, non-WHS sites
+
+Find WDPA_PIDs whose `IUCN_CAT` is unequal to the allowed values, cand `DESIG_ENG` is unequal to 'UNESCO-MAB (...)' or 'World Heritage Site (...)'. 
+
+'Not Applicable' is only allowed for 'UNESCO-MAB (...)' and 'World Heritage Site (...)', hence it is excluded from the allowed values in this function.
