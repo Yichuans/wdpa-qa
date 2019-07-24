@@ -237,11 +237,7 @@ Find WDPA_PIDs whose `VERIF` is unequal to:
 - Expert Verified
 - Not Reported
 
-#### 4.3.r. Invalid METADATAID
-
-Find WDPA_PIDs whose `METADATAID` is not found in the Source Table.
-
-#### 4.3.s. Invalid PARENT_ISO3
+#### 4.3.r. Invalid PARENT_ISO3
 
 Find WDPA_PIDs whose `ISO3` is not an allowed value.
 The list of allowed values is obtained from GitHub, where a user maintains the ISO-3166. 
@@ -251,12 +247,12 @@ Links:
 - [official repository](https://github.com/lukes/ISO-3166-Countries-with-Regional-Codes/blob/master/all/all.csv)
 - [raw data](https://raw.githubusercontent.com/lukes/ISO-3166-Countries-with-Regional-Codes/master/all/all.csv)
 
-#### 4.3.t. Invalid ISO3
+#### 4.3.s. Invalid ISO3
 
 Find WDPA_PIDs whose `ISO3` is not an allowed value. 
 The list of allowed values, and the method to obtain them, is identical to that of `4.3.s. Invalid PARENT_ISO3`.
 
-#### 4.3.u. Invalid STATUS & DESIG_TYPE
+#### 4.3.t. Invalid STATUS & DESIG_TYPE
 
 Find WDPA_PIDs whose `STATUS` is not equal to 'Established' while `DESIG_TYPE` is equal to 'Not Applicable'.
 
@@ -354,3 +350,7 @@ This captures all sites that have an `INT_CRIT` designation while they are not a
 Find WDPA_PIDs whose `IUCN_CAT` is unequal to the allowed values, cand `DESIG_ENG` is unequal to 'UNESCO-MAB (...)' or 'World Heritage Site (...)'. 
 
 'Not Applicable' is only allowed for 'UNESCO-MAB (...)' and 'World Heritage Site (...)', hence it is excluded from the allowed values in this function.
+
+#### 4.5.l. Invalid METADATAID
+
+Find WDPA_PIDs whose `METADATAID` is not found in the Source Table.
