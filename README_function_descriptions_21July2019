@@ -1,10 +1,14 @@
 ## 4. Checks
 
+---
 ### 4.1. Find duplicate WDPA_PIDs
+---
 
 **Rule**: `WDPA_PIDs` must be unique in the entire WDPA. Output the `WDPA_PIDs` that do not adhere to this rule.
 
+---
 ### 4.2. Find inconsistent fields for the same WDPAID
+---
 
 **Rule**: if the `WDPAID` is the same among a group of `WDPA_PID`s, then related fields (e.g. `ISO3` or `DESIG_ENG`) must be the same for the entire group. Output the WDPA_PIDs that do not adhere to this rule.
 
@@ -84,7 +88,9 @@ Find WDPA_PIDs that share the same WDPAID, but have inconsistencies in field `PA
 
 Find WDPA_PIDs that share the same WDPAID, but have inconsistencies in field `ISO3`.
 
+---
 ### 4.3 Find invalid values in fields
+---
 
 **Rule**: for a number of fields, only a set number of values are allowed. Output the WDPA_PIDs that do not adhere to this rule.
 
@@ -250,7 +256,16 @@ Links:
 Find WDPA_PIDs whose `ISO3` is not an allowed value. 
 The list of allowed values, and the method to obtain them, is identical to that of `4.3.s. Invalid PARENT_ISO3`.
 
+#### 4.3.u. Invalid STATUS & DESIG_TYPE
+
+Find WDPA_PIDs whose `STATUS` is not equal to 'Established' while `DESIG_TYPE` is equal to 'Not Applicable'.
+
+---
+
 ### 4.4. Area invalid size
+
+---
+
 
 **Rule**: certain areas cannot be larger than other areas. Output the `WDPA_PIDs` that do not adhere to this rule.
 
