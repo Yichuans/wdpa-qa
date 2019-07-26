@@ -97,6 +97,11 @@ class TestDuplicateWDPA_PID(unittest.TestCase):
 
 # invalid values in fields
 class TestInvalidValues(unittest.TestCase):
+	# dummy test by Yichuan - 23 July 2019
+	# def test_inconsistent_fields_same_wdpaid(self):
+	# 	self.assertEqual(list(inconsistent_fields_same_wdpaid(
+    #         df_x, check_field, True)), ['1.234', '2.355']) # these are the output WDPA_PIDs
+	
     def test_desig_type(self):
         self.assertTrue(qa.invalid_desig_type(df2))
 
