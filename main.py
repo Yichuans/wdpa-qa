@@ -9,16 +9,15 @@ from wdpa.qas import *
 
 # prepare loading different checks
 core_checks = [
-('invalid_nan', invalid_nan),
+# ('invalid_nan', invalid_nan),
 ('duplicate_wdpa_pid', duplicate_wdpa_pid),
 ('area_invalid_marine', area_invalid_marine),
-('assign_marine_value', assign_marine_value),
+# ('assign_marine_value', assign_marine_value),
 ('area_invalid_rep_m_area_marine12', area_invalid_rep_m_area_marine12),
 ('area_invalid_gis_m_area_marine12', area_invalid_gis_m_area_marine12),
 ('invalid_no_take_no_tk_area_rep_m_area', invalid_no_take_no_tk_area_rep_m_area),
 ('invalid_int_crit_desig_eng_other', invalid_int_crit_desig_eng_other),
 ('invalid_desig_eng_iucn_cat_other', invalid_desig_eng_iucn_cat_other),
-('inconsistent_fields_same_wdpaid', inconsistent_fields_same_wdpaid),
 ('inconsistent_name_same_wdpaid', inconsistent_name_same_wdpaid),
 ('inconsistent_orig_name_same_wdpaid', inconsistent_orig_name_same_wdpaid),
 ('inconsistent_desig_same_wdpaid', inconsistent_desig_same_wdpaid),
@@ -91,23 +90,9 @@ poly = core_checks + area_checks
 # df
 # poly_df = arcgis_table_to_df(input_poly,input_fields_poly)
 # pt_df = arcgis_table_to_df(input_pt,input_fields_point)
-# poly_df = arcgis_table_to_df(input_poly,input_fields_poly)
+# poly_df = arcgis_table_to_df(input_poly, input_fields_poly)
 
-poly_df = [[40597.0, 40597.0, u'1', u'Lopeichubei', u'Lopeichubei',
-        u'Forest Reserve', u'Forest Reserve', u'National', u'Not Reported',
-        u'Not Applicable', u'0', 0.0, 0.0, 166.6365, 167.37390617160307,
-        u'Not Applicable', 0.0, u'Designated', 1963,
-        u'Federal or national ministry or agency', u'Not Reported',
-        u'Not Reported', u'Not Reported', u'State Verified', 1708,
-        u'Not Reported', u'UGA', u'UGA'],
-
-        [40597.0, 40597.0, u'1', u'Lopeichubei', u'Lopeichubei',
-        u'Forest Reserve', u'Forest Reserve', u'National', u'Not Reported',
-        u'Not Applicable', u'0', 0.0, 0.0, 166.6365, 167.37390617160307,
-        u'Not Applicable', 0.0, u'Designated', 1963,
-        u'Federal or national ministry or agency', u'Not Reported',
-        u'Not Reported', u'Not Reported', u'State Verified', 1708,
-        u'Not Reported', u'UGA', u'UGA']]
+poly_df = arcgis_table_to_df(r"E:\Yichuan\WDPA\WDPA_May2016_Public.gdb\WDPA_poly_May2016", input_fields_poly)
 
 for name, f in poly:
-    print(name, f(poly_df, True))
+    print(name, f(poly_df))
