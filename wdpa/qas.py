@@ -68,13 +68,13 @@ input_fields_source = ['METADATAID','DATA_TITLE','RESP_PARTY','VERIFIER','YEAR',
 # Use this for the Polygons, Points, and the Source Table
 
 # Source: https://gist.github.com/d-wasserman/e9c98be1d0caebc2935afecf0ba239a0
-def arcgis_table_to_df(in_fc, workspace_gdb, input_fields, query=''):
+def arcgis_table_to_df(in_fc, input_fields, query=''):
     '''
     Function will convert an arcgis table into a pandas DataFrame with an OBJECTID index, and the selected
     input fields using an arcpy.da.SearchCursor.
     '''
 
-    arcpy.env.workspace = workspace_gdb # set workspace (e.g. 'WDPA_Jun2019_Public.gdb')
+    # arcpy.env.workspace = workspace_gdb # set workspace (e.g. 'WDPA_Jun2019_Public.gdb')
     OIDFieldName = arcpy.Describe(in_fc).OIDFieldName # obtain OBJECTID field
     final_fields = [OIDFieldName] + input_fields # Make a list of all fields that need to be extracted
     data = [row for row in arcpy.da.SearchCursor(in_fc,final_fields,where_clause=query)] # for all fields, obtain all rows
