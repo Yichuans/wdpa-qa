@@ -201,7 +201,7 @@ def area_invalid_marine(wdpa_df, return_pid=False):
     def assign_marine_value(wdpa_df):
         if wdpa_df['marine_proportion'] < coast_min:
             return '0'
-        elif coast_min < wdpa_df['marine_proportion'] < coast_max:
+        elif coast_min <= wdpa_df['marine_proportion'] <= coast_max:
             return '1'
         elif wdpa_df['marine_proportion'] > coast_max:
             return '2'
