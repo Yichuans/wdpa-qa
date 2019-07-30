@@ -11,10 +11,10 @@ from wdpa.qas import *
 core_checks = [
 # ('invalid_nan', invalid_nan),
 ('duplicate_wdpa_pid', duplicate_wdpa_pid),
-('area_invalid_marine', area_invalid_marine),
 # ('assign_marine_value', assign_marine_value),
 ('area_invalid_rep_m_area_marine12', area_invalid_rep_m_area_marine12),
-('area_invalid_gis_m_area_marine12', area_invalid_gis_m_area_marine12),
+('area_invalid_rep_m_area_rep_area', area_invalid_rep_m_area_rep_area),
+('area_invalid_no_tk_area_rep_m_area', area_invalid_no_tk_area_rep_m_area),
 ('invalid_no_take_no_tk_area_rep_m_area', invalid_no_take_no_tk_area_rep_m_area),
 ('invalid_int_crit_desig_eng_other', invalid_int_crit_desig_eng_other),
 ('invalid_desig_eng_iucn_cat_other', invalid_desig_eng_iucn_cat_other),
@@ -74,10 +74,11 @@ area_checks = [
 ('area_invalid_too_large_gis_m', area_invalid_too_large_gis_m),
 ('area_invalid_too_large_rep_m', area_invalid_too_large_rep_m),
 ('area_invalid_gis_area', area_invalid_gis_area),
-('area_invalid_no_tk_area_rep_m_area', area_invalid_no_tk_area_rep_m_area),
 ('area_invalid_no_tk_area_gis_m_area', area_invalid_no_tk_area_gis_m_area),
 ('area_invalid_gis_m_area_gis_area', area_invalid_gis_m_area_gis_area),
-('area_invalid_rep_m_area_rep_area', area_invalid_rep_m_area_rep_area)]
+('area_invalid_marine', area_invalid_marine),
+('area_invalid_gis_m_area_marine12', area_invalid_gis_m_area_marine12)]
+
 
 pt = core_checks
 poly = core_checks + area_checks
