@@ -3,8 +3,8 @@ from wdpa.qas import *
 from wdpa.stijn import output_errors_to_excel
 
 # load input
-# input_poly = sys.argv[1]
-input_poly = r"E:\Yichuan\WDPA\WDPA_May2016_Public.gdb\WDPA_poly_May2016"
+input_poly = sys.argv[1]
+# input_poly = r"E:\Yichuan\WDPA\WDPA_May2016_Public.gdb\WDPA_poly_May2016"
 # output_path = sys.argv[2]
 
 # test

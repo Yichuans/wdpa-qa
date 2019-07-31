@@ -42,7 +42,7 @@ def output_errors_to_excel(main_output, function_name):
 
     # set constants - to later add the current day to the filename
     DATE = f"{datetime.datetime.now():%d%B%Y}"
-    FILENAME ='WDPA_errors'
+    FILENAME = 'WDPA_errors'
     SUFFIX = '.xlsx'
     
     # Import WDPA rows, that contain errors, into Excel    
