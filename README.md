@@ -7,9 +7,8 @@ TBD
 Please refrain from commiting directly to the `master` branch - create a different branch containing edits and submit a pull request. 
 
 ```
-git checkout -b {your branch}
+git checkout -b {your branch} {base branch}
 ```
-
 
 ## Background
 
@@ -21,5 +20,6 @@ TBD
 
 ## Quick start
 
-TBD
+## 3rd party library
 
+Openpyxl
