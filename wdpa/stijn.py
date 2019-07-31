@@ -1,3 +1,13 @@
+# import package
+from openpyxl import Workbook
+from openpyxl import load_workbook
+from openpyxl.utils.dataframe import dataframe_to_rows    
+from openpyxl.formatting import Rule
+from openpyxl.styles import Font, PatternFill, Border
+from openpyxl.styles.differential import DifferentialStyle
+import datetime
+import os
+
 def output_errors_to_excel(main_output, function_name):
     '''
     ## Action point: refactor the conditional formatting
@@ -28,20 +38,11 @@ def output_errors_to_excel(main_output, function_name):
     output_errors_to_excel(main_output='output_31July2019',
                             function_name='invalid_desig_eng_regional')
     '''
- 
-    # import package
-    from openpyxl import Workbook
-    from openpyxl import load_workbook
-    from openpyxl.utils.dataframe import dataframe_to_rows    
-    from openpyxl.formatting import Rule
-    from openpyxl.styles import Font, PatternFill, Border
-    from openpyxl.styles.differential import DifferentialStyle
-    import datetime
-    import os
+
 
     # set constants - to later add the current day to the filename
     DATE = f"{datetime.datetime.now():%d%B%Y}"
-    FILENAME = 'WDPA_errors'
+    FILENAME ='WDPA_errors'
     SUFFIX = '.xlsx'
     
     # Import WDPA rows, that contain errors, into Excel    
