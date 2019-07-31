@@ -41,7 +41,7 @@ import os
 
 ## Polygon data
 
-input_fields_poly = ['WDPAID', 'WDPA_PID', 'PA_DEF', 'NAME', 'ORIG_NAME', 'DESIG', 
+INPUT_FIELDS_POLY = ['WDPAID', 'WDPA_PID', 'PA_DEF', 'NAME', 'ORIG_NAME', 'DESIG', 
                      'DESIG_ENG', 'DESIG_TYPE', 'IUCN_CAT', 'INT_CRIT', 'MARINE', 'REP_M_AREA', 
                      'GIS_M_AREA', 'REP_AREA', 'GIS_AREA', 'NO_TAKE', 'NO_TK_AREA', 'STATUS', 'STATUS_YR', 
                      'GOV_TYPE', 'OWN_TYPE', 'MANG_AUTH', 'MANG_PLAN', 'VERIF', 'METADATAID', 'SUB_LOC', 
@@ -49,7 +49,7 @@ input_fields_poly = ['WDPAID', 'WDPA_PID', 'PA_DEF', 'NAME', 'ORIG_NAME', 'DESIG
 
 ## Point data
 
-input_fields_point = ['WDPAID', 'WDPA_PID', 'PA_DEF', 'NAME', 'ORIG_NAME', 'DESIG', 
+INPUT_FIELDS_PT = ['WDPAID', 'WDPA_PID', 'PA_DEF', 'NAME', 'ORIG_NAME', 'DESIG', 
                       'DESIG_ENG', 'DESIG_TYPE', 'IUCN_CAT', 'INT_CRIT', 'MARINE', 'REP_M_AREA', 
                       'REP_AREA', 'NO_TAKE', 'NO_TK_AREA', 'STATUS', 'STATUS_YR', 'GOV_TYPE', 
                       'OWN_TYPE', 'MANG_AUTH', 'MANG_PLAN', 'VERIF', 'METADATAID', 'SUB_LOC', 
@@ -57,7 +57,7 @@ input_fields_point = ['WDPAID', 'WDPA_PID', 'PA_DEF', 'NAME', 'ORIG_NAME', 'DESI
 
 ## Source Table
 
-input_fields_source = ['METADATAID','DATA_TITLE','RESP_PARTY','VERIFIER','YEAR',
+INPUT_FIELDS_META = ['METADATAID','DATA_TITLE','RESP_PARTY','VERIFIER','YEAR',
                        'UPDATE_YR', 'LANGUAGE','CHAR_SET','REF_SYSTEM', 'SCALE', 
                        'LINEAGE', 'CITATION','DISCLAIMER', ]
 
@@ -1677,7 +1677,7 @@ def invalid_metadataid_not_in_source_table(wdpa_df, wdpa_source, return_pid=Fals
     Return list of WDPA_PIDs for which the METADATAID is not present in the Source Table
     '''
         
-    field = ['METADATAID']
+    field = 'METADATAID'
 
     ########## OPTIONAL ##########
     #### Remove METADATAID = 840 (Russian sites that are restricted and not in Source Table)    
@@ -1689,8 +1689,8 @@ def invalid_metadataid_not_in_source_table(wdpa_df, wdpa_source, return_pid=Fals
     ##############################
 
     # Find invalid WDPA_PIDs
-    invalid_wdpa_pid = wdpa_df[~wdpa_df[field[0]].isin(
-                                wdpa_source[field[0]].values)]['WDPA_PID'].values
+    invalid_wdpa_pid = wdpa_df[~wdpa_df[field].isin(
+                                wdpa_source[field].values)]['WDPA_PID'].values
     
     if return_pid:
         return invalid_wdpa_pid
