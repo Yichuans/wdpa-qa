@@ -3,9 +3,13 @@ from wdpa.qas import *
 
 # load input
 # input_poly = sys.argv[1]
-# input_pt = sys.argv[2]
-# input_meta = sys.argv[3]
-# output_path = sys.argv[4]
+input_poly = r"E:\Yichuan\WDPA\WDPA_May2016_Public.gdb\WDPA_poly_May2016"
+# output_path = sys.argv[2]
+
+# test
+poly_df = arcgis_table_to_df(input_poly, INPUT_FIELDS_POLY)
+
+sample = poly_df.sample(20000)
 
 # prepare loading different checks
 core_checks = [
@@ -60,15 +64,6 @@ core_checks = [
 ('invalid_iso3', invalid_iso3),
 ('invalid_status_desig_type', invalid_status_desig_type),]
 
-# ('forbidden_character', forbidden_character),
-# ('forbidden_character_name', forbidden_character_name),
-# ('forbidden_character_orig_name', forbidden_character_orig_name),
-# ('forbidden_character_desig', forbidden_character_desig),
-# ('forbidden_character_desig_eng', forbidden_character_desig_eng),
-# ('forbidden_character_mang_auth', forbidden_character_mang_auth),
-# ('forbidden_character_mang_plan', forbidden_character_mang_plan),
-# ('forbidden_character_sub_loc', forbidden_character_sub_loc)
-
 area_checks = [
 ('area_invalid_too_large_gis', area_invalid_too_large_gis),
 ('area_invalid_too_large_rep', area_invalid_too_large_rep),
@@ -80,33 +75,26 @@ area_checks = [
 ('area_invalid_marine', area_invalid_marine),
 ('area_invalid_gis_m_area_marine12', area_invalid_gis_m_area_marine12)]
 
-
-pt = core_checks
+# checks to run
+# pt = core_checks
 poly = core_checks + area_checks
 
-# find_wdpa_rows(wdpa_df, wdpa_pid):
-# invalid_metadataid_not_in_source_table(wdpa_df, wdpa_source, return_pid=False):
-# invalid_metadataid_not_in_wdpa(wdpa_df, wdpa_point, wdpa_source, return_pid=False):
-
-
-# df
-# poly_df = arcgis_table_to_df(input_poly,input_fields_poly)
-# pt_df = arcgis_table_to_df(input_pt,input_fields_point)
-# poly_df = arcgis_table_to_df(input_poly, input_fields_poly)
-
-poly_df = arcgis_table_to_df(r"E:\Yichuan\WDPA\WDPA_May2016_Public.gdb\WDPA_poly_May2016", input_fields_poly)
-sample = poly_df.sample(20000)
-
-# for name, f in poly:
-#     print(name, f(poly_df))
-
+# ('forbidden_character', forbidden_character),
+# ('forbidden_character_name', forbidden_character_name),
+# ('forbidden_character_orig_name', forbidden_character_orig_name),
+# ('forbidden_character_desig', forbidden_character_desig),
+# ('forbidden_character_desig_eng', forbidden_character_desig_eng),
+# ('forbidden_character_mang_auth', forbidden_character_mang_auth),
+# ('forbidden_character_mang_plan', forbidden_character_mang_plan),
+# ('forbidden_character_sub_loc', forbidden_character_sub_loc)
 
 result = dict()
 
 for name, f in poly:
-    # checks are not optimised, thus return all pids
+    # checks are not optimised, thus return all pids regardless
     wdpa_pid = f(sample, True)
     if wdpa_pid.size > 0:
         result[name] = find_wdpa_rows(sample, wdpa_pid)
+
 
 
