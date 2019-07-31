@@ -72,10 +72,21 @@ def arcgis_table_to_df(in_fc, input_fields, query=''):
     '''
     Function will convert an arcgis table into a pandas DataFrame with an OBJECTID index, and the selected
     input fields using an arcpy.da.SearchCursor.
+    For in_fc, specify the name of the geodatabase (.gdb) and feature class attribute table
+    
+    ## Arguments ##
+    in_fc -- feature class attribute table - inside geodatabase - to import. 
+             Specify: <nameOfGeodatabase>/<nameOfFeatureClassAttributeTable>
+    input_fields -- list of all fields that must be imported from the dataset
+    query -- optional where_clause of arcpy.da.SearchCursor. Leave default for normal usage.
+
+    ## Example ##
+    arcgis_table_to_df(in_fc='WDPA_Jun2019_Public.gdb/WDPA_Jun2019_errortest',
+    input_fields=input_fields_poly,
+    query='')
     '''
 
-    # arcpy.env.workspace = workspace_gdb # set workspace (e.g. 'WDPA_Jun2019_Public.gdb')
-    OIDFieldName = arcpy.Describe(in_fc).OIDFieldName # obtain OBJECTID field
+    OIDFieldName = arcpy.Describe(in_fc).OIDFieldName # obtain OBJECTID field.
     final_fields = [OIDFieldName] + input_fields # Make a list of all fields that need to be extracted
     data = [row for row in arcpy.da.SearchCursor(in_fc,final_fields,where_clause=query)] # for all fields, obtain all rows
     fc_dataframe = pd.DataFrame(data,columns=final_fields) # Put data into pandas DataFrame
@@ -560,7 +571,7 @@ def inconsistent_fields_same_wdpaid(wdpa_df,
     
     ## Example ##
     inconsistent_fields_same_wdpaid(
-        wdpa_df,
+        wdpa_df=wdpa_df,
         check_fields=["DESIG_ENG"],
         return_pid=True):    
     '''
@@ -568,7 +579,7 @@ def inconsistent_fields_same_wdpaid(wdpa_df,
     if return_pid:
         # Group by WDPAID to find duplicate WDPAIDs and count the 
         # number of unique values for the field in question
-        wdpaid_groups = wdpa_df.groupby(['WDPAID'])[check_fields].nunique()
+        wdpaid_groups = wdpa_df.groupby(['WDPAID'])[check_fields[0]].nunique()
 
         # Select all WDPAID duplicates groups with >1 unique value for 
         # specified field ('check_attributtes') and use their index to
@@ -599,7 +610,7 @@ def inconsistent_name_same_wdpaid(wdpa_df, return_pid=False):
     # The command below loads the parent function
     # and adds the check_fields and return_pid arguments in it
     # to evaluate the wdpa_df for these arguments
-    return inconsistent_fields_same_wdpaid(wdpa_df, return_pid, check_fields)
+    return inconsistent_fields_same_wdpaid(wdpa_df, check_fields, return_pid)
 	
 #####################################
 #### 3.2. Inconsistent ORIG_NAME ####
@@ -616,7 +627,7 @@ def inconsistent_orig_name_same_wdpaid(wdpa_df, return_pid=False):
 
     check_fields = ['ORIG_NAME']
     
-    return inconsistent_fields_same_wdpaid(wdpa_df, return_pid, check_fields)
+    return inconsistent_fields_same_wdpaid(wdpa_df, check_fields, return_pid)
 
 #################################	
 #### 3.3. Inconsistent DESIG ####
@@ -633,7 +644,7 @@ def inconsistent_desig_same_wdpaid(wdpa_df, return_pid=False):
     
     check_fields = ['DESIG']
     
-    return inconsistent_fields_same_wdpaid(wdpa_df, return_pid, check_fields)
+    return inconsistent_fields_same_wdpaid(wdpa_df, check_fields, return_pid)
 	
 #####################################
 #### 3.4. Inconsistent DESIG_ENG ####
@@ -650,7 +661,7 @@ def inconsistent_desig_eng_same_wdpaid(wdpa_df, return_pid=False):
     
     check_fields = ['DESIG_ENG']
     
-    return inconsistent_fields_same_wdpaid(wdpa_df, return_pid, check_fields)
+    return inconsistent_fields_same_wdpaid(wdpa_df, check_fields, return_pid)
 
 ######################################
 #### 3.5. Inconsistent DESIG_TYPE ####
@@ -667,7 +678,7 @@ def inconsistent_desig_type_same_wdpaid(wdpa_df, return_pid=False):
     
     check_fields = ['DESIG_TYPE']
     
-    return inconsistent_fields_same_wdpaid(wdpa_df, return_pid, check_fields)
+    return inconsistent_fields_same_wdpaid(wdpa_df, check_fields, return_pid)
 
 ####################################
 #### 3.6. Inconsistent IUCN_CAT ####
@@ -684,7 +695,7 @@ def inconsistent_iucn_cat_same_wdpaid(wdpa_df, return_pid=False):
 
     check_fields = ['IUCN_CAT']
     
-    return inconsistent_fields_same_wdpaid(wdpa_df, return_pid, check_fields)
+    return inconsistent_fields_same_wdpaid(wdpa_df, check_fields, return_pid)
 
 ####################################
 #### 3.7. Inconsistent INT_CRIT ####
@@ -701,7 +712,7 @@ def inconsistent_int_crit_same_wdpaid(wdpa_df, return_pid=False):
 
     check_fields = ['INT_CRIT']
     
-    return inconsistent_fields_same_wdpaid(wdpa_df, return_pid, check_fields)
+    return inconsistent_fields_same_wdpaid(wdpa_df, check_fields, return_pid)
 
 ###################################
 #### 3.8. Inconsistent NO_TAKE ####
@@ -717,7 +728,7 @@ def inconsistent_no_take_same_wdpaid(wdpa_df, return_pid=False):
     '''
     check_fields = ['NO_TAKE']
 
-    return inconsistent_fields_same_wdpaid(wdpa_df, return_pid, check_fields)
+    return inconsistent_fields_same_wdpaid(wdpa_df, check_fields, return_pid)
 
 ##################################
 #### 3.9. Inconsistent STATUS ####
@@ -733,7 +744,7 @@ def inconsistent_status_same_wdpaid(wdpa_df, return_pid=False):
     '''
     check_fields = ['STATUS']
 
-    return inconsistent_fields_same_wdpaid(wdpa_df, return_pid, check_fields)
+    return inconsistent_fields_same_wdpaid(wdpa_df, check_fields, return_pid)
 
 ######################################
 #### 3.10. Inconsistent STATUS_YR ####
@@ -749,7 +760,7 @@ def inconsistent_status_yr_same_wdpaid(wdpa_df, return_pid=False):
     '''
     check_fields = ['STATUS_YR']
 
-    return inconsistent_fields_same_wdpaid(wdpa_df, return_pid, check_fields)
+    return inconsistent_fields_same_wdpaid(wdpa_df, check_fields, return_pid)
 
 #####################################
 #### 3.11. Inconsistent GOV_TYPE ####
@@ -765,7 +776,7 @@ def inconsistent_gov_type_same_wdpaid(wdpa_df, return_pid=False):
     '''
     check_fields = ['GOV_TYPE']
 
-    return inconsistent_fields_same_wdpaid(wdpa_df, return_pid, check_fields)
+    return inconsistent_fields_same_wdpaid(wdpa_df, check_fields, return_pid)
 
 #####################################
 #### 3.12. Inconsistent OWN_TYPE ####
@@ -781,7 +792,7 @@ def inconsistent_own_type_same_wdpaid(wdpa_df, return_pid=False):
     '''
     check_fields = ['OWN_TYPE']
 
-    return inconsistent_fields_same_wdpaid(wdpa_df, return_pid, check_fields)
+    return inconsistent_fields_same_wdpaid(wdpa_df, check_fields, return_pid)
 
 ######################################
 #### 3.13. Inconsistent MANG_AUTH ####
@@ -798,7 +809,7 @@ def inconsistent_mang_auth_same_wdpaid(wdpa_df, return_pid=False):
     
     check_fields = ['MANG_AUTH']
     
-    return inconsistent_fields_same_wdpaid(wdpa_df, return_pid, check_fields)
+    return inconsistent_fields_same_wdpaid(wdpa_df, check_fields, return_pid)
 
 ######################################
 #### 3.14. Inconsistent MANG_PLAN ####
@@ -814,7 +825,7 @@ def inconsistent_mang_plan_same_wdpaid(wdpa_df, return_pid=False):
     '''
     check_fields = ['MANG_PLAN']
 
-    return inconsistent_fields_same_wdpaid(wdpa_df, return_pid, check_fields)
+    return inconsistent_fields_same_wdpaid(wdpa_df, check_fields, return_pid)
 
 ##################################
 #### 3.15. Inconsistent VERIF ####
@@ -830,7 +841,7 @@ def inconsistent_verif_same_wdpaid(wdpa_df, return_pid=False):
     '''
     check_fields = ['VERIF']
 
-    return inconsistent_fields_same_wdpaid(wdpa_df, return_pid, check_fields)
+    return inconsistent_fields_same_wdpaid(wdpa_df, check_fields, return_pid)
 
 #######################################
 #### 3.16. Inconsistent METADATAID ####
@@ -846,7 +857,7 @@ def inconsistent_metadataid_same_wdpaid(wdpa_df, return_pid=False):
     '''
     check_fields = ['METADATAID']
 
-    return inconsistent_fields_same_wdpaid(wdpa_df, return_pid, check_fields)
+    return inconsistent_fields_same_wdpaid(wdpa_df, check_fields, return_pid)
 
 ###################################
 #### 3.17 Inconsistent SUB_LOC ####
@@ -862,7 +873,7 @@ def inconsistent_sub_loc_same_wdpaid(wdpa_df, return_pid=False):
     '''
     check_fields = ['SUB_LOC']
 
-    return inconsistent_fields_same_wdpaid(wdpa_df, return_pid, check_fields)
+    return inconsistent_fields_same_wdpaid(wdpa_df, check_fields, return_pid)
 
 #######################################
 ### 3.18. Inconsistent PARENT_ISO3 ####
@@ -878,7 +889,7 @@ def inconsistent_parent_iso3_same_wdpaid(wdpa_df, return_pid=False):
     '''
     check_fields = ['PARENT_ISO3']
 
-    return inconsistent_fields_same_wdpaid(wdpa_df, return_pid, check_fields)
+    return inconsistent_fields_same_wdpaid(wdpa_df, check_fields, return_pid)
 
 ################################
 #### 3.19 Inconsistent ISO3 ####
@@ -895,7 +906,7 @@ def inconsistent_iso3_same_wdpaid(wdpa_df, return_pid=False):
     '''
     check_fields = ['ISO3']
 
-    return inconsistent_fields_same_wdpaid(wdpa_df, return_pid, check_fields)
+    return inconsistent_fields_same_wdpaid(wdpa_df, check_fields, return_pid)
 	
 ##########################################
 #### 4. Find invalid values in fields ####
