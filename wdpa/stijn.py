@@ -8,24 +8,24 @@ from openpyxl.formatting import Rule
 from openpyxl.styles import Font, PatternFill, Border
 from openpyxl.styles.differential import DifferentialStyle
 
-def output_errors_to_excel(main_output, checks):
+def output_errors_to_excel(result, outpath, checks):
     '''
     ## Action point: refactor the conditional formatting
     
     The functions_list is a list that contains all the names of the 
     functions (tests) of the WDPA QA. If the function's name is present
-    in the main_output dictionary produced by the main function, 
+    in the result dictionary produced by the main function, 
     the WDPA failed the test and contains errors.
     
     Function output_errors_to_excel evaluates whether each function's name 
-    in functions_list, is present in the main_output dictionary. 
+    in functions_list, is present in the result dictionary. 
     If so, it will output the coresponding DataFrame to a sheet in an 
     Excel file. In the Excel Summary sheet, the function's name will be 
     added along with string 'Fail'. Else, the test's name will be added to 
     the Excel Summary sheet along with string 'Pass'.
         
     ## Arguments ##
-    main_output --    dictionary created by the main function, containing 
+    result --    dictionary created by the main function, containing 
                       functions' names and DataFrames for tests that failed. 
                       In this dictionary, a function's name is the 'key', and 
                       the DataFrame with errors is the 'value'.
@@ -34,15 +34,15 @@ def output_errors_to_excel(main_output, checks):
                       names of the WDPA QA
 
     ## Example ##
-    output_errors_to_excel(main_output='output_31July2019',
+    output_errors_to_excel(result='output_31July2019',
                             functions_list=['invalid_desig_type',
                             'inconsistent_name_same_wdpaid'])
     '''
     
     # set constants - to later add the current day to the filename
-    DATE = f"{datetime.datetime.now():%d%B%Y}"
-    FILENAME = 'WDPA_errors'
-    SUFFIX = '.xlsx'
+    filename = f"{datetime.datetime.now():%d%B%Y_WDPA_QA_checks.xlsx}"
+
+    output = outpath + os.sep + filename
     
     # Create the Excel workbook and the Summary sheet
     wb = Workbook()
@@ -51,19 +51,19 @@ def output_errors_to_excel(main_output, checks):
     wb["Summary"].append(["CHECK","RESULT"]) # enter header for Summary sheet
 
     # If the function's name - in the functions_list - is present in the 
-    # main_output dictionary, add DataFrame to a new sheet
+    # result dictionary, add DataFrame to a new sheet
     function_names = [each['name'] for each in checks]
 
     for function_name in function_names:
-        if function_name in main_output:
+        if function_name in result:
             ws = wb.create_sheet(function_name)
         # export DataFrame rows to Excel
-            for row in dataframe_to_rows(main_output[function_name], index=False): 
+            for row in dataframe_to_rows(result[function_name], index=False): 
                 ws.append(row)
         # add 'Fail' to Summary sheet
             wb["Summary"].append([function_name,"Fail"]) 
 
-        # function_name is not present in the main_output
+        # function_name is not present in the result
         else:
             wb["Summary"].append([function_name,"Pass"])
 
@@ -85,5 +85,5 @@ def output_errors_to_excel(main_output, checks):
     wb["Summary"].sheet_properties.tabColor = "1072BB" # blue tab   
     
     # Save the workbook
-    wb.save(DATE+FILENAME+SUFFIX)
+    wb.save(output)
     return

@@ -1730,7 +1730,7 @@ def invalid_metadataid_not_in_wdpa(wdpa_df, wdpa_point, wdpa_source, return_pid=
     return len(invalid_metadataid) >= 1
 
 
-CORE_CHECKS = [
+core_checks = [
 {'name': 'duplicate_wdpa_pid', 'func': duplicate_wdpa_pid},
 # {'name': 'area_invalid_rep_m_area_marine12', 'func': area_invalid_rep_m_area_marine12},
 {'name': 'rep_m_area_gt_rep_area', 'func': area_invalid_rep_m_area_rep_area},
@@ -1780,7 +1780,7 @@ CORE_CHECKS = [
 {'name': 'ivd_iso3', 'func': invalid_iso3},
 {'name': 'ivd_status_desig_type', 'func': invalid_status_desig_type},]
 
-AREA_CHECKS = [
+area_checks = [
 {'name': 'gis_area_gt_rep_area', 'func': area_invalid_too_large_gis},
 {'name': 'rep_area_gt_gis_area', 'func': area_invalid_too_large_rep},
 {'name': 'gis_m_area_gt_rep_m_area', 'func': area_invalid_too_large_gis_m},
@@ -1791,4 +1791,16 @@ AREA_CHECKS = [
 {'name': 'wrong_marine', 'func': area_invalid_marine},
 {'name': 'zero_gis_m_area_marine12', 'func': area_invalid_gis_m_area_marine12},]
 
-POLY_CHECKS = CORE_CHECKS + AREA_CHECKS
+# prepare loading different checks
+
+# ('forbidden_character', forbidden_character),
+# ('forbidden_character_name', forbidden_character_name),
+# ('forbidden_character_orig_name', forbidden_character_orig_name),
+# ('forbidden_character_desig', forbidden_character_desig),
+# ('forbidden_character_desig_eng', forbidden_character_desig_eng),
+# ('forbidden_character_mang_auth', forbidden_character_mang_auth),
+# ('forbidden_character_mang_plan', forbidden_character_mang_plan),
+# ('forbidden_character_sub_loc', forbidden_character_sub_loc)
+
+poly_checks = core_checks + area_checks
+pt_checks = core_checks
