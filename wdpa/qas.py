@@ -199,11 +199,11 @@ def area_invalid_marine(wdpa_df, return_pid=False):
     wdpa_df['marine_proportion'] = wdpa_df['GIS_M_AREA'] / wdpa_df['GIS_AREA']
     
     def assign_marine_value(wdpa_df):
-        if wdpa_df['marine_proportion'] < coast_min:
+        if wdpa_df['marine_proportion'] <= coast_min:
             return '0'
         elif coast_min < wdpa_df['marine_proportion'] < coast_max:
             return '1'
-        elif wdpa_df['marine_proportion'] > coast_max:
+        elif wdpa_df['marine_proportion'] >= coast_max:
             return '2'
     
     # calculate the marine_value
@@ -552,7 +552,7 @@ def invalid_desig_eng_iucn_cat_other(wdpa_df, return_pid=False):
 #### Parent function ####
 
 def inconsistent_fields_same_wdpaid(wdpa_df, 
-                                        check_fields, 
+                                        check_field, 
                                         return_pid=False):
     '''
     Factory of functions: this generic function is to be linked to
@@ -567,19 +567,19 @@ def inconsistent_fields_same_wdpaid(wdpa_df,
     return_pid is set True
 
     ## Arguments ##
-    check_fields -- list of the field(s) to check for inconsistency
+    check_field -- list of the field(s) to check for inconsistency
     
     ## Example ##
     inconsistent_fields_same_wdpaid(
         wdpa_df=wdpa_df,
-        check_fields=["DESIG_ENG"],
+        check_field=["DESIG_ENG"],
         return_pid=True):    
     '''
 
     if return_pid:
         # Group by WDPAID to find duplicate WDPAIDs and count the 
         # number of unique values for the field in question
-        wdpaid_groups = wdpa_df.groupby(['WDPAID'])[check_fields[0]].nunique()
+        wdpaid_groups = wdpa_df.groupby(['WDPAID'])[check_field].nunique()
 
         # Select all WDPAID duplicates groups with >1 unique value for 
         # specified field ('check_attributtes') and use their index to
@@ -587,7 +587,7 @@ def inconsistent_fields_same_wdpaid(wdpa_df,
         return wdpa_df[wdpa_df['WDPAID'].isin(wdpaid_groups[wdpaid_groups >1].index)]['WDPA_PID'].values
                 
     # Sum the number of times a WDPAID has more than 1 value for a field
-    return (wdpa_df.groupby('WDPAID')[check_fields].nunique() > 1).sum() >= 1
+    return (wdpa_df.groupby('WDPAID')[check_field].nunique() > 1).sum() > 0
 	
 
 #### Child functions ####
@@ -605,12 +605,12 @@ def inconsistent_name_same_wdpaid(wdpa_df, return_pid=False):
     Output: list with WDPA_PIDs containing field inconsistencies
     '''
 
-    check_fields = ['NAME']
+    check_field = 'NAME'
     
     # The command below loads the parent function
-    # and adds the check_fields and return_pid arguments in it
+    # and adds the check_field and return_pid arguments in it
     # to evaluate the wdpa_df for these arguments
-    return inconsistent_fields_same_wdpaid(wdpa_df, check_fields, return_pid)
+    return inconsistent_fields_same_wdpaid(wdpa_df, check_field, return_pid)
 	
 #####################################
 #### 3.2. Inconsistent ORIG_NAME ####
@@ -625,9 +625,9 @@ def inconsistent_orig_name_same_wdpaid(wdpa_df, return_pid=False):
     Output: list with WDPA_PIDs containing field inconsistencies
     '''
 
-    check_fields = ['ORIG_NAME']
+    check_field = 'ORIG_NAME'
     
-    return inconsistent_fields_same_wdpaid(wdpa_df, check_fields, return_pid)
+    return inconsistent_fields_same_wdpaid(wdpa_df, check_field, return_pid)
 
 #################################	
 #### 3.3. Inconsistent DESIG ####
@@ -642,9 +642,9 @@ def inconsistent_desig_same_wdpaid(wdpa_df, return_pid=False):
     Output: list with WDPA_PIDs containing field inconsistencies
     '''
     
-    check_fields = ['DESIG']
+    check_field = 'DESIG'
     
-    return inconsistent_fields_same_wdpaid(wdpa_df, check_fields, return_pid)
+    return inconsistent_fields_same_wdpaid(wdpa_df, check_field, return_pid)
 	
 #####################################
 #### 3.4. Inconsistent DESIG_ENG ####
@@ -659,9 +659,9 @@ def inconsistent_desig_eng_same_wdpaid(wdpa_df, return_pid=False):
     Output: list with WDPA_PIDs containing field inconsistencies
     '''
     
-    check_fields = ['DESIG_ENG']
+    check_field = 'DESIG_ENG'
     
-    return inconsistent_fields_same_wdpaid(wdpa_df, check_fields, return_pid)
+    return inconsistent_fields_same_wdpaid(wdpa_df, check_field, return_pid)
 
 ######################################
 #### 3.5. Inconsistent DESIG_TYPE ####
@@ -676,9 +676,9 @@ def inconsistent_desig_type_same_wdpaid(wdpa_df, return_pid=False):
     Output: list with WDPA_PIDs containing field inconsistencies
     '''
     
-    check_fields = ['DESIG_TYPE']
+    check_field = 'DESIG_TYPE'
     
-    return inconsistent_fields_same_wdpaid(wdpa_df, check_fields, return_pid)
+    return inconsistent_fields_same_wdpaid(wdpa_df, check_field, return_pid)
 
 ####################################
 #### 3.6. Inconsistent IUCN_CAT ####
@@ -693,9 +693,9 @@ def inconsistent_iucn_cat_same_wdpaid(wdpa_df, return_pid=False):
     Output: list with WDPA_PIDs containing field inconsistencies
     '''
 
-    check_fields = ['IUCN_CAT']
+    check_field = 'IUCN_CAT'
     
-    return inconsistent_fields_same_wdpaid(wdpa_df, check_fields, return_pid)
+    return inconsistent_fields_same_wdpaid(wdpa_df, check_field, return_pid)
 
 ####################################
 #### 3.7. Inconsistent INT_CRIT ####
@@ -710,9 +710,9 @@ def inconsistent_int_crit_same_wdpaid(wdpa_df, return_pid=False):
     Output: list with WDPA_PIDs containing field inconsistencies
     '''
 
-    check_fields = ['INT_CRIT']
+    check_field = 'INT_CRIT'
     
-    return inconsistent_fields_same_wdpaid(wdpa_df, check_fields, return_pid)
+    return inconsistent_fields_same_wdpaid(wdpa_df, check_field, return_pid)
 
 ###################################
 #### 3.8. Inconsistent NO_TAKE ####
@@ -726,9 +726,9 @@ def inconsistent_no_take_same_wdpaid(wdpa_df, return_pid=False):
     Input: WDPA in pandas DataFrame 
     Output: list with WDPA_PIDs containing field inconsistencies
     '''
-    check_fields = ['NO_TAKE']
+    check_field = 'NO_TAKE'
 
-    return inconsistent_fields_same_wdpaid(wdpa_df, check_fields, return_pid)
+    return inconsistent_fields_same_wdpaid(wdpa_df, check_field, return_pid)
 
 ##################################
 #### 3.9. Inconsistent STATUS ####
@@ -742,9 +742,9 @@ def inconsistent_status_same_wdpaid(wdpa_df, return_pid=False):
     Input: WDPA in pandas DataFrame 
     Output: list with WDPA_PIDs containing field inconsistencies
     '''
-    check_fields = ['STATUS']
+    check_field = 'STATUS'
 
-    return inconsistent_fields_same_wdpaid(wdpa_df, check_fields, return_pid)
+    return inconsistent_fields_same_wdpaid(wdpa_df, check_field, return_pid)
 
 ######################################
 #### 3.10. Inconsistent STATUS_YR ####
@@ -758,9 +758,9 @@ def inconsistent_status_yr_same_wdpaid(wdpa_df, return_pid=False):
     Input: WDPA in pandas DataFrame 
     Output: list with WDPA_PIDs containing field inconsistencies
     '''
-    check_fields = ['STATUS_YR']
+    check_field = 'STATUS_YR'
 
-    return inconsistent_fields_same_wdpaid(wdpa_df, check_fields, return_pid)
+    return inconsistent_fields_same_wdpaid(wdpa_df, check_field, return_pid)
 
 #####################################
 #### 3.11. Inconsistent GOV_TYPE ####
@@ -774,9 +774,9 @@ def inconsistent_gov_type_same_wdpaid(wdpa_df, return_pid=False):
     Input: WDPA in pandas DataFrame 
     Output: list with WDPA_PIDs containing field inconsistencies
     '''
-    check_fields = ['GOV_TYPE']
+    check_field = 'GOV_TYPE'
 
-    return inconsistent_fields_same_wdpaid(wdpa_df, check_fields, return_pid)
+    return inconsistent_fields_same_wdpaid(wdpa_df, check_field, return_pid)
 
 #####################################
 #### 3.12. Inconsistent OWN_TYPE ####
@@ -790,9 +790,9 @@ def inconsistent_own_type_same_wdpaid(wdpa_df, return_pid=False):
     Input: WDPA in pandas DataFrame 
     Output: list with WDPA_PIDs containing field inconsistencies
     '''
-    check_fields = ['OWN_TYPE']
+    check_field = 'OWN_TYPE'
 
-    return inconsistent_fields_same_wdpaid(wdpa_df, check_fields, return_pid)
+    return inconsistent_fields_same_wdpaid(wdpa_df, check_field, return_pid)
 
 ######################################
 #### 3.13. Inconsistent MANG_AUTH ####
@@ -807,9 +807,9 @@ def inconsistent_mang_auth_same_wdpaid(wdpa_df, return_pid=False):
     Output: list with WDPA_PIDs containing field inconsistencies
     '''
     
-    check_fields = ['MANG_AUTH']
+    check_field = 'MANG_AUTH'
     
-    return inconsistent_fields_same_wdpaid(wdpa_df, check_fields, return_pid)
+    return inconsistent_fields_same_wdpaid(wdpa_df, check_field, return_pid)
 
 ######################################
 #### 3.14. Inconsistent MANG_PLAN ####
@@ -823,9 +823,9 @@ def inconsistent_mang_plan_same_wdpaid(wdpa_df, return_pid=False):
     Input: WDPA in pandas DataFrame 
     Output: list with WDPA_PIDs containing field inconsistencies
     '''
-    check_fields = ['MANG_PLAN']
+    check_field = 'MANG_PLAN'
 
-    return inconsistent_fields_same_wdpaid(wdpa_df, check_fields, return_pid)
+    return inconsistent_fields_same_wdpaid(wdpa_df, check_field, return_pid)
 
 ##################################
 #### 3.15. Inconsistent VERIF ####
@@ -839,9 +839,9 @@ def inconsistent_verif_same_wdpaid(wdpa_df, return_pid=False):
     Input: WDPA in pandas DataFrame 
     Output: list with WDPA_PIDs containing field inconsistencies
     '''
-    check_fields = ['VERIF']
+    check_field = 'VERIF'
 
-    return inconsistent_fields_same_wdpaid(wdpa_df, check_fields, return_pid)
+    return inconsistent_fields_same_wdpaid(wdpa_df, check_field, return_pid)
 
 #######################################
 #### 3.16. Inconsistent METADATAID ####
@@ -855,9 +855,9 @@ def inconsistent_metadataid_same_wdpaid(wdpa_df, return_pid=False):
     Input: WDPA in pandas DataFrame 
     Output: list with WDPA_PIDs containing field inconsistencies
     '''
-    check_fields = ['METADATAID']
+    check_field = 'METADATAID'
 
-    return inconsistent_fields_same_wdpaid(wdpa_df, check_fields, return_pid)
+    return inconsistent_fields_same_wdpaid(wdpa_df, check_field, return_pid)
 
 ###################################
 #### 3.17 Inconsistent SUB_LOC ####
@@ -871,9 +871,9 @@ def inconsistent_sub_loc_same_wdpaid(wdpa_df, return_pid=False):
     Input: WDPA in pandas DataFrame 
     Output: list with WDPA_PIDs containing field inconsistencies
     '''
-    check_fields = ['SUB_LOC']
+    check_field = 'SUB_LOC'
 
-    return inconsistent_fields_same_wdpaid(wdpa_df, check_fields, return_pid)
+    return inconsistent_fields_same_wdpaid(wdpa_df, check_field, return_pid)
 
 #######################################
 ### 3.18. Inconsistent PARENT_ISO3 ####
@@ -887,9 +887,9 @@ def inconsistent_parent_iso3_same_wdpaid(wdpa_df, return_pid=False):
     Input: WDPA in pandas DataFrame 
     Output: list with WDPA_PIDs containing field inconsistencies
     '''
-    check_fields = ['PARENT_ISO3']
+    check_field = 'PARENT_ISO3'
 
-    return inconsistent_fields_same_wdpaid(wdpa_df, check_fields, return_pid)
+    return inconsistent_fields_same_wdpaid(wdpa_df, check_field, return_pid)
 
 ################################
 #### 3.19 Inconsistent ISO3 ####
@@ -904,9 +904,9 @@ def inconsistent_iso3_same_wdpaid(wdpa_df, return_pid=False):
     Input: WDPA in pandas DataFrame 
     Output: list with WDPA_PIDs containing field inconsistencies
     '''
-    check_fields = ['ISO3']
+    check_field = 'ISO3'
 
-    return inconsistent_fields_same_wdpaid(wdpa_df, check_fields, return_pid)
+    return inconsistent_fields_same_wdpaid(wdpa_df, check_field, return_pid)
 	
 ##########################################
 #### 4. Find invalid values in fields ####
@@ -1521,7 +1521,7 @@ def area_invalid_rep_m_area_rep_area(wdpa_df, return_pid=False):
 
 #### Parent function ####
 
-def forbidden_character(wdpa_df, check_fields, return_pid=False):
+def forbidden_character(wdpa_df, check_field, return_pid=False):
     '''
     Factory of functions: this generic function is to be linked to
     the family of 'forbidden character' functions stated below. These latter 
@@ -1534,12 +1534,12 @@ def forbidden_character(wdpa_df, check_fields, return_pid=False):
     return_pid is set True
 
     ## Arguments ##
-    check_fields -- list of the field(s) to check for forbidden characters
+    check_field -- list of the field(s) to check for forbidden characters
     
     ## Example ##
     forbidden_character(
         wdpa_df,
-        check_fields=["DESIG_ENG"],
+        check_field=["DESIG_ENG"],
         return_pid=True):    
     '''
 
@@ -1549,7 +1549,7 @@ def forbidden_character(wdpa_df, check_fields, return_pid=False):
     field_unallowed_values = [re.escape(m) for m in matches] # ensure correct formatting of forbidden characters
 
     # Obtain the WDPA_PIDs with forbidden characters
-    invalid_wdpa_pid = wdpa_df[wdpa_df[check_fields[0]].str.contains('|'.join(field_unallowed_values))]['WDPA_PID'].values
+    # invalid_wdpa_pid = wdpa_df[wdpa_df[check_field.str.contains('|'.join(field_unallowed_values))]['WDPA_PID'].values
 
     if return_pid:
         return invalid_wdpa_pid
@@ -1570,9 +1570,9 @@ def forbidden_character_name(wdpa_df, return_pid=False):
     Output: list with WDPA_PIDs containing forbidden characters in field 'NAME'
     '''
 
-    check_fields = ['NAME']
+    check_field = 'NAME'
 
-    return forbidden_character(wdpa_df, check_fields, return_pid)
+    return forbidden_character(wdpa_df, check_field, return_pid)
 
 ##############################################
 #### 6.2. Forbidden character - ORIG_NAME ####
@@ -1586,9 +1586,9 @@ def forbidden_character_orig_name(wdpa_df, return_pid=False):
     Output: list with WDPA_PIDs containing forbidden characters in field 'ORIG_NAME'
     '''
 
-    check_fields = ['ORIG_NAME']
+    check_field = 'ORIG_NAME'
 
-    return forbidden_character(wdpa_df, check_fields, return_pid)
+    return forbidden_character(wdpa_df, check_field, return_pid)
 
 ##########################################
 #### 6.3. Forbidden character - DESIG ####
@@ -1602,9 +1602,9 @@ def forbidden_character_desig(wdpa_df, return_pid=False):
     Output: list with WDPA_PIDs containing forbidden characters in field 'DESIG'
     '''
 
-    check_fields = ['DESIG']
+    check_field = 'DESIG'
 
-    return forbidden_character(wdpa_df, check_fields, return_pid)
+    return forbidden_character(wdpa_df, check_field, return_pid)
 
 ##############################################
 #### 6.4. Forbidden character - DESIG_ENG ####
@@ -1618,9 +1618,9 @@ def forbidden_character_desig_eng(wdpa_df, return_pid=False):
     Output: list with WDPA_PIDs containing forbidden characters in field 'DESIG_ENG'
     '''
 
-    check_fields = ['DESIG_ENG']
+    check_field = 'DESIG_ENG'
 
-    return forbidden_character(wdpa_df, check_fields, return_pid)
+    return forbidden_character(wdpa_df, check_field, return_pid)
 
 ##############################################
 #### 6.5. Forbidden character - MANG_AUTH ####
@@ -1634,9 +1634,9 @@ def forbidden_character_mang_auth(wdpa_df, return_pid=False):
     Output: list with WDPA_PIDs containing forbidden characters in field 'MANG_AUTH'
     '''
 
-    check_fields = ['MANG_AUTH']
+    check_field = 'MANG_AUTH'
 
-    return forbidden_character(wdpa_df, check_fields, return_pid)
+    return forbidden_character(wdpa_df, check_field, return_pid)
 
 ##############################################
 #### 6.6. Forbidden character - MANG_PLAN ####
@@ -1650,9 +1650,9 @@ def forbidden_character_mang_plan(wdpa_df, return_pid=False):
     Output: list with WDPA_PIDs containing forbidden characters in field 'MANG_PLAN'
     '''
 
-    check_fields = ['MANG_PLAN']
+    check_field = 'MANG_PLAN'
 
-    return forbidden_character(wdpa_df, check_fields, return_pid)
+    return forbidden_character(wdpa_df, check_field, return_pid)
 
 ############################################
 #### 6.7. Forbidden character - SUB_LOC ####
@@ -1666,9 +1666,9 @@ def forbidden_character_sub_loc(wdpa_df, return_pid=False):
     Output: list with WDPA_PIDs containing forbidden characters in field 'SUB_LOC'
     '''
 
-    check_fields = ['SUB_LOC']
+    check_field = 'SUB_LOC'
 
-    return forbidden_character(wdpa_df, check_fields, return_pid)
+    return forbidden_character(wdpa_df, check_field, return_pid)
 
 ##############################################
 #### 7. METADATAID: WDPA and Source Table ####
