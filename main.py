@@ -10,8 +10,8 @@ from wdpa.qas import *
 # prepare loading different checks
 core_checks = [
 # ('invalid_nan', invalid_nan),
-('duplicate_wdpa_pid', duplicate_wdpa_pid),
 # ('assign_marine_value', assign_marine_value),
+('duplicate_wdpa_pid', duplicate_wdpa_pid),
 ('area_invalid_rep_m_area_marine12', area_invalid_rep_m_area_marine12),
 ('area_invalid_rep_m_area_rep_area', area_invalid_rep_m_area_rep_area),
 ('area_invalid_no_tk_area_rep_m_area', area_invalid_no_tk_area_rep_m_area),
@@ -58,15 +58,16 @@ core_checks = [
 ('invalid_verif', invalid_verif),
 ('invalid_parent_iso3', invalid_parent_iso3),
 ('invalid_iso3', invalid_iso3),
-('invalid_status_desig_type', invalid_status_desig_type),
-('forbidden_character', forbidden_character),
-('forbidden_character_name', forbidden_character_name),
-('forbidden_character_orig_name', forbidden_character_orig_name),
-('forbidden_character_desig', forbidden_character_desig),
-('forbidden_character_desig_eng', forbidden_character_desig_eng),
-('forbidden_character_mang_auth', forbidden_character_mang_auth),
-('forbidden_character_mang_plan', forbidden_character_mang_plan),
-('forbidden_character_sub_loc', forbidden_character_sub_loc),]
+('invalid_status_desig_type', invalid_status_desig_type),]
+
+# ('forbidden_character', forbidden_character),
+# ('forbidden_character_name', forbidden_character_name),
+# ('forbidden_character_orig_name', forbidden_character_orig_name),
+# ('forbidden_character_desig', forbidden_character_desig),
+# ('forbidden_character_desig_eng', forbidden_character_desig_eng),
+# ('forbidden_character_mang_auth', forbidden_character_mang_auth),
+# ('forbidden_character_mang_plan', forbidden_character_mang_plan),
+# ('forbidden_character_sub_loc', forbidden_character_sub_loc)
 
 area_checks = [
 ('area_invalid_too_large_gis', area_invalid_too_large_gis),
@@ -94,6 +95,18 @@ poly = core_checks + area_checks
 # poly_df = arcgis_table_to_df(input_poly, input_fields_poly)
 
 poly_df = arcgis_table_to_df(r"E:\Yichuan\WDPA\WDPA_May2016_Public.gdb\WDPA_poly_May2016", input_fields_poly)
+sample = poly_df.sample(20000)
+
+# for name, f in poly:
+#     print(name, f(poly_df))
+
+
+result = dict()
 
 for name, f in poly:
-    print(name, f(poly_df))
+    # checks are not optimised, thus return all pids
+    wdpa_pid = f(sample, True)
+    if wdpa_pid.size > 0:
+        result[name] = find_wdpa_rows(sample, wdpa_pid)
+
+
