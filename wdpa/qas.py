@@ -401,10 +401,10 @@ def area_invalid_gis_area(wdpa_df, return_pid=False):
     
     # Arguments
     size_threshold = 0.0001
-    field_gis_area = ['GIS_AREA']
+    field_gis_area = 'GIS_AREA'
     
     # Find invalid WDPA_PIDs
-    invalid_wdpa_pid = wdpa_df[wdpa_df[field_gis_area[0]] <= size_threshold]['WDPA_PID'].values
+    invalid_wdpa_pid = wdpa_df[wdpa_df[field_gis_area] <= size_threshold]['WDPA_PID'].values
     
     if return_pid:
         return invalid_wdpa_pid
@@ -422,14 +422,13 @@ def area_invalid_rep_m_area_marine12(wdpa_df, return_pid=False):
     '''
     
     # Arguments
-    field = ['REP_M_AREA']
-    field_allowed_values = [0]
-    condition_field = ['MARINE']
+    field = 'REP_M_AREA'
+    field_allowed_values = 0
+    condition_field = 'MARINE'
     condition_crit = ['1','2']
     
     # Find invalid WDPA_PIDs
-    invalid_wdpa_pid = wdpa_df[(wdpa_df[field[0]] <= field_allowed_values[0]) & 
-                               wdpa_df[condition_field[0]].isin(condition_crit)]['WDPA_PID'].values
+    invalid_wdpa_pid = wdpa_df[(wdpa_df[field] <= field_allowed_values) & (wdpa_df[condition_field].isin(condition_crit))]['WDPA_PID'].values
     
     if return_pid:
         return invalid_wdpa_pid
@@ -437,7 +436,7 @@ def area_invalid_rep_m_area_marine12(wdpa_df, return_pid=False):
     return len(invalid_wdpa_pid) >= 1
 
 ##########################################################
-## 2.10. Invalid: GIS_M_AREA <= 0 when MARINE = 1 or 2 ####
+## 2.10. Invalid: GIS_M_AREA <= 0 when MARINE = 1 or 2 ###
 ##########################################################
 
 def area_invalid_gis_m_area_marine12(wdpa_df, return_pid=False):
@@ -447,14 +446,13 @@ def area_invalid_gis_m_area_marine12(wdpa_df, return_pid=False):
     '''
     
     # Arguments
-    field = ['GIS_M_AREA']
-    field_allowed_values = [0]
-    condition_field = ['MARINE']
+    field = 'GIS_M_AREA'
+    field_allowed_values = 0
+    condition_field = 'MARINE'
     condition_crit = ['1','2']
     
     # Find invalid WDPA_PIDs
-    invalid_wdpa_pid = wdpa_df[(wdpa_df[field[0]] <= field_allowed_values[0]) & 
-                               wdpa_df[condition_field[0]].isin(condition_crit)]['WDPA_PID'].values
+    invalid_wdpa_pid = wdpa_df[(wdpa_df[field] <= field_allowed_values) & (wdpa_df[condition_field].isin(condition_crit))]['WDPA_PID'].values
     
     if return_pid:
         return invalid_wdpa_pid
@@ -495,15 +493,14 @@ def invalid_int_crit_desig_eng_other(wdpa_df, return_pid=False):
     '''
     
     # Arguments
-    field = ['DESIG_ENG']
+    field = 'DESIG_ENG'
     field_allowed_values = ['Ramsar Site, Wetland of International Importance', 
                             'World Heritage Site (natural or mixed)']
-    condition_field = ['INT_CRIT']
+    condition_field = 'INT_CRIT'
     condition_crit = ['Not Applicable']
     
     # Find invalid WDPA_PIDs
-    invalid_wdpa_pid = wdpa_df[~wdpa_df[field[0]].isin(field_allowed_values) &
-                               ~wdpa_df[condition_field[0]].isin(condition_crit)]['WDPA_PID'].values
+    invalid_wdpa_pid = wdpa_df[(~wdpa_df[field].isin(field_allowed_values)) & (~wdpa_df[condition_field].isin(condition_crit))]['WDPA_PID'].values
     
     if return_pid:
         return invalid_wdpa_pid
@@ -522,7 +519,7 @@ def invalid_desig_eng_iucn_cat_other(wdpa_df, return_pid=False):
     '''
 
     # Arguments
-    field = ['IUCN_CAT']
+    field = 'IUCN_CAT'
     field_allowed_values = ['Ia',
                             'Ib',
                             'II',
@@ -532,13 +529,12 @@ def invalid_desig_eng_iucn_cat_other(wdpa_df, return_pid=False):
                             'VI',
                             'Not Reported',
                             'Not Assigned']
-    condition_field = ['DESIG_ENG']
+    condition_field = 'DESIG_ENG'
     condition_crit = ['UNESCO-MAB Biosphere Reserve', 
                       'World Heritage Site (natural or mixed)']
     
     # Find invalid WDPA_PIDs
-    invalid_wdpa_pid = wdpa_df[~wdpa_df[field[0]].isin(field_allowed_values) &
-                               ~wdpa_df[condition_field[0]].isin(condition_crit)]['WDPA_PID'].values
+    invalid_wdpa_pid = wdpa_df[(~wdpa_df[field].isin(field_allowed_values)) & (~wdpa_df[condition_field].isin(condition_crit))]['WDPA_PID'].values
 
     if return_pid:
         return invalid_wdpa_pid
@@ -584,7 +580,7 @@ def inconsistent_fields_same_wdpaid(wdpa_df,
         # Select all WDPAID duplicates groups with >1 unique value for 
         # specified field ('check_attributtes') and use their index to
         # return the WDPA_PIDs
-        return wdpa_df[wdpa_df['WDPAID'].isin(wdpaid_groups[wdpaid_groups >1].index)]['WDPA_PID'].values
+        return wdpa_df[wdpa_df['WDPAID'].isin(wdpaid_groups[wdpaid_groups > 1].index)]['WDPA_PID'].values
                 
     # Sum the number of times a WDPAID has more than 1 value for a field
     return (wdpa_df.groupby('WDPAID')[check_field].nunique() > 1).sum() > 0
@@ -932,7 +928,7 @@ def invalid_value_in_field(wdpa_df, field, field_allowed_values, condition_field
     condition_field      -- a constraint of another field for evaluating 
                             invalid values, in list; leave "" if no condition specified
     condition_crit       -- a list of values for which the condition_field 
-                            needs to be evaluated; leave "" if no condition specified
+                            needs to be evaluated; leave [] if no condition specified
 
     ## Example ##
     invalid_value_in_field(
@@ -946,16 +942,13 @@ def invalid_value_in_field(wdpa_df, field, field_allowed_values, condition_field
         return_pid=True):
     '''
 
-    if field and field_allowed_values and condition_field and condition_crit:
-        invalid_wdpa_pid = wdpa_df[~wdpa_df[field[0]].isin(field_allowed_values) & 
-                           wdpa_df[condition_field[0]].isin(condition_crit)]['WDPA_PID'].values
+    # in condition specified
+    if condition_field != '' and condition_crit != []:
+        invalid_wdpa_pid = wdpa_df[(~wdpa_df[field].isin(field_allowed_values)) & (wdpa_df[condition_field].isin(condition_crit))]['WDPA_PID'].values
 
     # If no condition_field and condition_crit are specified
     else:
-        if field and field_allowed_values:
-            invalid_wdpa_pid = wdpa_df[~wdpa_df[field[0]].isin(field_allowed_values)]['WDPA_PID'].values
-        else: 
-            raise Exception('ERROR: field(s) and/or condition(s) to test are not specified')
+        invalid_wdpa_pid = wdpa_df[~wdpa_df[field].isin(field_allowed_values)]['WDPA_PID'].values
             
     if return_pid:
         # return list with invalid WDPA_PIDs
@@ -975,9 +968,9 @@ def invalid_pa_def(wdpa_df, return_pid=False):
     Return list of WDPA_PIDs where PA_DEF is not 1, if return_pid is set True
     '''
 
-    field = ['PA_DEF']
+    field = 'PA_DEF'
     field_allowed_values = ['1'] # WDPA datatype is string
-    condition_field = []
+    condition_field = ''
     condition_crit = []
 
     return invalid_value_in_field(wdpa_df, field, field_allowed_values, condition_field, condition_crit, return_pid)
@@ -992,11 +985,11 @@ def invalid_desig_eng_international(wdpa_df, return_pid=False):
     Return list of WDPA_PIDs where DESIG_ENG is invalid, if return_pid is set True
     '''
     
-    field = ['DESIG_ENG']
+    field = 'DESIG_ENG'
     field_allowed_values = ['Ramsar Site, Wetland of International Importance', 
                             'UNESCO-MAB Biosphere Reserve', 
                             'World Heritage Site (natural or mixed)']
-    condition_field = ['DESIG_TYPE']
+    condition_field = 'DESIG_TYPE'
     condition_crit = ['International']
     
     return invalid_value_in_field(wdpa_df, field, field_allowed_values, condition_field, condition_crit, return_pid)
@@ -1011,9 +1004,9 @@ def invalid_desig_type_international(wdpa_df, return_pid=False):
     Return list of WDPA_PIDs where DESIG_TYPE is invalid, if return_pid is set True
     '''
     
-    field = ['DESIG_TYPE']
+    field = 'DESIG_TYPE'
     field_allowed_values = ['International']
-    condition_field = ['DESIG_ENG']
+    condition_field = 'DESIG_ENG'
     condition_crit = ['Ramsar Site, Wetland of International Importance', 
                       'UNESCO-MAB Biosphere Reserve', 
                       'World Heritage Site (natural or mixed)']
@@ -1031,7 +1024,7 @@ def invalid_desig_eng_regional(wdpa_df, return_pid=False):
     Return list of WDPA_PIDs where DESIG_ENG is invalid, if return_pid is set True
     '''
     
-    field = ['DESIG_ENG']
+    field = 'DESIG_ENG'
     field_allowed_values = ['Baltic Sea Protected Area (HELCOM)', 
                             'Specially Protected Area (Cartagena Convention)', 
                             'Marine Protected Area (CCAMLR)', 
@@ -1039,7 +1032,7 @@ def invalid_desig_eng_regional(wdpa_df, return_pid=False):
                             'Site of Community Importance (Habitats Directive)', 
                             'Special Protection Area (Birds Directive)', 
                             'Specially Protected Areas of Mediterranean Importance (Barcelona Convention)']
-    condition_field = ['DESIG_TYPE']
+    condition_field = 'DESIG_TYPE'
     condition_crit = ['Regional']
     
     return invalid_value_in_field(wdpa_df, field, field_allowed_values, condition_field, condition_crit, return_pid)
@@ -1054,9 +1047,9 @@ def invalid_desig_type_regional(wdpa_df, return_pid=False):
     Return list of WDPA_PIDs where DESIG_TYPE is invalid, if return_pid is set True
     '''
     
-    field = ['DESIG_TYPE']
+    field = 'DESIG_TYPE'
     field_allowed_values = ['Regional']
-    condition_field = ['DESIG_ENG']
+    condition_field = 'DESIG_ENG'
     condition_crit = ['Baltic Sea Protected Area (HELCOM)', 
                       'Specially Protected Area (Cartagena Convention)', 
                       'Marine Protected Area (CCAMLR)', 
@@ -1092,10 +1085,10 @@ def invalid_int_crit_desig_eng_ramsar_whs(wdpa_df, return_pid=False):
         return collection
    
     # Arguments
-    field = ['INT_CRIT']
+    field = 'INT_CRIT'
     field_allowed_values_extra = ['Not Reported']
     field_allowed_values =  generate_combinations() + field_allowed_values_extra
-    condition_field = ['DESIG_ENG']
+    condition_field = 'DESIG_ENG'
     condition_crit = ['Ramsar Site, Wetland of International Importance', 
                       'World Heritage Site (natural or mixed)']
     
@@ -1111,12 +1104,12 @@ def invalid_desig_type(wdpa_df, return_pid=False):
     Return list of WDPA_PIDs where DESIG_TYPE is invalid, if return_pid is set True
     '''
 
-    field = ['DESIG_TYPE']
+    field = 'DESIG_TYPE'
     field_allowed_values = ['National', 
                             'Regional', 
                             'International', 
                             'Not Applicable']
-    condition_field = []
+    condition_field = ''
     condition_crit = []
 
     return invalid_value_in_field(wdpa_df, field, field_allowed_values, condition_field, condition_crit, return_pid)
@@ -1131,13 +1124,13 @@ def invalid_iucn_cat(wdpa_df, return_pid=False):
     Return list of WDPA_PIDs where IUCN_CAT is invalid, if return_pid is set True
     '''
     
-    field = ['IUCN_CAT']
+    field = 'IUCN_CAT'
     field_allowed_values = ['Ia', 'Ib', 'II', 'III', 
                             'IV', 'V', 'VI', 
                             'Not Reported', 
                             'Not Applicable', 
                             'Not Assigned']
-    condition_field = []
+    condition_field = ''
     condition_crit = []
     
     return invalid_value_in_field(wdpa_df, field, field_allowed_values, condition_field, condition_crit, return_pid)
@@ -1153,9 +1146,9 @@ def invalid_iucn_cat_unesco_whs(wdpa_df, return_pid=False):
     Return list of WDPA_PIDs where IUCN_CAT is invalid, if return_pid is set True
     '''
     
-    field = ['IUCN_CAT']
+    field = 'IUCN_CAT'
     field_allowed_values = ['Not Applicable']
-    condition_field = ['DESIG_ENG']
+    condition_field = 'DESIG_ENG'
     condition_crit = ['UNESCO-MAB Biosphere Reserve', 
                       'World Heritage Site (natural or mixed)']
     
@@ -1171,9 +1164,9 @@ def invalid_marine(wdpa_df, return_pid=False):
     Return list of WDPA_PIDs where MARINE is invalid, if return_pid is set True
     '''
 
-    field = ['MARINE']
+    field = 'MARINE'
     field_allowed_values = ['0','1','2']
-    condition_field = []
+    condition_field = ''
     condition_crit = []
 
     return invalid_value_in_field(wdpa_df, field, field_allowed_values, condition_field, condition_crit, return_pid)
@@ -1189,9 +1182,9 @@ def invalid_no_take_marine0(wdpa_df, return_pid=False):
     Return list of WDPA_PIDs where NO_TAKE is invalid, if return_pid is set True
     '''
 
-    field = ['NO_TAKE']
+    field = 'NO_TAKE'
     field_allowed_values = ['Not Applicable']
-    condition_field = ['MARINE']
+    condition_field = 'MARINE'
     condition_crit = ['0']
 
     return invalid_value_in_field(wdpa_df, field, field_allowed_values, condition_field, condition_crit, return_pid)
@@ -1207,9 +1200,9 @@ def invalid_no_take_marine12(wdpa_df, return_pid=False):
     Return list of WDPA_PIDs where NO_TAKE is invalid, if return_pid is set True
     '''
 
-    field = ['NO_TAKE']
+    field = 'NO_TAKE'
     field_allowed_values = ['All', 'Part', 'None', 'Not Reported']
-    condition_field = ['MARINE']
+    condition_field = 'MARINE'
     condition_crit = ['1', '2']
 
     return invalid_value_in_field(wdpa_df, field, field_allowed_values, condition_field, condition_crit, return_pid)
@@ -1225,9 +1218,9 @@ def invalid_no_tk_area_marine(wdpa_df, return_pid=False):
     Return list of WDPA_PIDs where NO_TAKE is invalid, if return_pid is set True
     '''
 
-    field = ['NO_TK_AREA']
+    field = 'NO_TK_AREA'
     field_allowed_values = [0]
-    condition_field = ['MARINE']
+    condition_field = 'MARINE'
     condition_crit = ['0']
 
     return invalid_value_in_field(wdpa_df, field, field_allowed_values, condition_field, condition_crit, return_pid)
@@ -1242,9 +1235,9 @@ def invalid_no_tk_area_no_take(wdpa_df, return_pid=False):
     Return list of WDPA_PIDs where NO_TK_AREA is invalid, if return_pid is set True
     '''
 
-    field = ['NO_TK_AREA']
+    field = 'NO_TK_AREA'
     field_allowed_values = [0]
-    condition_field = ['NO_TAKE']
+    condition_field = 'NO_TAKE'
     condition_crit = ['Not Applicable']
 
     return invalid_value_in_field(wdpa_df, field, field_allowed_values, condition_field, condition_crit, return_pid)
@@ -1259,9 +1252,9 @@ def invalid_status(wdpa_df, return_pid=False):
     Return list of WDPA_PIDs where STATUS is invalid, if return_pid is set True
     '''
 
-    field = ['STATUS']
+    field = 'STATUS'
     field_allowed_values = ['Proposed', 'Inscribed', 'Adopted', 'Designated', 'Established']
-    condition_field = []
+    condition_field = ''
     condition_crit = []
 
     return invalid_value_in_field(wdpa_df, field, field_allowed_values, condition_field, condition_crit, return_pid)
@@ -1276,11 +1269,11 @@ def invalid_status_yr(wdpa_df, return_pid=False):
     Return list of WDPA_PIDs where STATUS_YR is invalid, if return_pid is set True
     '''
     
-    field = ['STATUS_YR']
+    field = 'STATUS_YR'
     year = datetime.date.today().year # obtain current year
     yearArray = [0] + np.arange(1819, year + 1, 1).tolist() # make a list of all years, from 0 to current year
     field_allowed_values = [str(x) for x in yearArray] # change all integers to strings
-    condition_field = []
+    condition_field = ''
     condition_crit = []
     
     return invalid_value_in_field(wdpa_df, field, field_allowed_values, condition_field, condition_crit, return_pid)
@@ -1295,7 +1288,7 @@ def invalid_gov_type(wdpa_df, return_pid=False):
     Return list of WDPA_PIDs where GOV_TYPE is invalid, if return_pid is set True
     '''
     
-    field = ['GOV_TYPE']
+    field = 'GOV_TYPE'
     field_allowed_values = ['Federal or national ministry or agency', 
                             'Sub-national ministry or agency', 
                             'Government-delegated management', 
@@ -1309,7 +1302,7 @@ def invalid_gov_type(wdpa_df, return_pid=False):
                             'Local communities', 
                             'Not Reported']
     
-    condition_field = []
+    condition_field = ''
     condition_crit = []
     
     return invalid_value_in_field(wdpa_df, field, field_allowed_values, condition_field, condition_crit, return_pid)
@@ -1324,7 +1317,7 @@ def invalid_own_type(wdpa_df, return_pid=False):
     Return list of WDPA_PIDs where OWN_TYPE is invalid, if return_pid is set True
     '''
     
-    field = ['OWN_TYPE']
+    field = 'OWN_TYPE'
     field_allowed_values = ['State', 
                             'Communal', 
                             'Individual landowners', 
@@ -1334,7 +1327,7 @@ def invalid_own_type(wdpa_df, return_pid=False):
                             'Multiple ownership', 
                             'Contested', 
                             'Not Reported']
-    condition_field = []
+    condition_field = ''
     condition_crit = []
     
     return invalid_value_in_field(wdpa_df, field, field_allowed_values, condition_field, condition_crit, return_pid)
@@ -1349,11 +1342,11 @@ def invalid_verif(wdpa_df, return_pid=False):
     Return list of WDPA_PIDs where VERIF is invalid, if return_pid is set True
     '''
     
-    field = ['VERIF']
+    field = 'VERIF'
     field_allowed_values = ['State Verified', 
                             'Expert Verified', 
                             'Not Reported']
-    condition_field = []
+    condition_field = ''
     condition_crit = []
     
     return invalid_value_in_field(wdpa_df, field, field_allowed_values, condition_field, condition_crit, return_pid)
@@ -1369,9 +1362,9 @@ def invalid_parent_iso3(wdpa_df, return_pid=False):
     Return list of WDPA_PIDs for which the PARENT_ISO3 is invalid
     '''
     
-    field = ['PARENT_ISO3']
+    field = 'PARENT_ISO3'
     field_allowed_values = iso3_df['alpha-3'].values
-    condition_field = []
+    condition_field = ''
     condition_crit = []
     
     return invalid_value_in_field(wdpa_df, field, field_allowed_values, condition_field, condition_crit, return_pid)
@@ -1387,9 +1380,9 @@ def invalid_iso3(wdpa_df, return_pid=False):
     Return list of WDPA_PIDs for which the ISO3 is invalid
     '''
     
-    field = ['ISO3']
+    field = 'ISO3'
     field_allowed_values = iso3_df['alpha-3'].values
-    condition_field = []
+    condition_field = ''
     condition_crit = []
     
     return invalid_value_in_field(wdpa_df, field, field_allowed_values, condition_field, condition_crit, return_pid)
@@ -1404,9 +1397,9 @@ def invalid_status_desig_type(wdpa_df, return_pid=False):
     Return list of WDPA_PIDs for which the STATUS is invalid
     '''
 
-    field = ['STATUS']
+    field = 'STATUS'
     field_allowed_values = ['Established']
-    condition_field = ['DESIG_TYPE']
+    condition_field = 'DESIG_TYPE'
     condition_crit = ['Not Applicable']
     
     return invalid_value_in_field(wdpa_df, field, field_allowed_values, condition_field, condition_crit, return_pid)
@@ -1521,40 +1514,40 @@ def area_invalid_rep_m_area_rep_area(wdpa_df, return_pid=False):
 
 #### Parent function ####
 
-def forbidden_character(wdpa_df, check_field, return_pid=False):
-    '''
-    Factory of functions: this generic function is to be linked to
-    the family of 'forbidden character' functions stated below. These latter 
-    functions are to give information on which fields to check and pull 
-    from the DataFrame. This function is the foundation of the others.
+# def forbidden_character(wdpa_df, check_field, return_pid=False):
+#     '''
+#     Factory of functions: this generic function is to be linked to
+#     the family of 'forbidden character' functions stated below. These latter 
+#     functions are to give information on which fields to check and pull 
+#     from the DataFrame. This function is the foundation of the others.
     
-    Return True if forbidden characters are found in the DataFrame
+#     Return True if forbidden characters are found in the DataFrame
 
-    Return list of WDPA_PID where forbidden characters occur, if 
-    return_pid is set True
+#     Return list of WDPA_PID where forbidden characters occur, if 
+#     return_pid is set True
 
-    ## Arguments ##
-    check_field -- list of the field(s) to check for forbidden characters
+#     ## Arguments ##
+#     check_field -- list of the field(s) to check for forbidden characters
     
-    ## Example ##
-    forbidden_character(
-        wdpa_df,
-        check_field=["DESIG_ENG"],
-        return_pid=True):    
-    '''
+#     ## Example ##
+#     forbidden_character(
+#         wdpa_df,
+#         check_field=["DESIG_ENG"],
+#         return_pid=True):    
+#     '''
 
-    # Import regular expression package and the forbidden characters
-    import re
-    matches = ['<','>',"?","*","#","\n","\r"]
-    field_unallowed_values = [re.escape(m) for m in matches] # ensure correct formatting of forbidden characters
+#     # Import regular expression package and the forbidden characters
+#     import re
+#     matches = ['<','>',"?","*","#","\n","\r"]
+#     field_unallowed_values = [re.escape(m) for m in matches] # ensure correct formatting of forbidden characters
 
-    # Obtain the WDPA_PIDs with forbidden characters
-    # invalid_wdpa_pid = wdpa_df[wdpa_df[check_field.str.contains('|'.join(field_unallowed_values))]['WDPA_PID'].values
+#     # Obtain the WDPA_PIDs with forbidden characters
+#     # invalid_wdpa_pid = wdpa_df[wdpa_df[check_field.str.contains('|'.join(field_unallowed_values))]['WDPA_PID'].values
 
-    if return_pid:
-        return invalid_wdpa_pid
+#     if return_pid:
+#         return invalid_wdpa_pid
         
-    return len(invalid_wdpa_pid) >= 1
+#     return len(invalid_wdpa_pid) >= 1
 
 #### Child functions ####
 
@@ -1562,113 +1555,113 @@ def forbidden_character(wdpa_df, check_field, return_pid=False):
 #### 6.1. Forbidden character - NAME ####
 #########################################
 
-def forbidden_character_name(wdpa_df, return_pid=False):
-    '''
-    This function is to capture forbidden characters in the field 'NAME'
+# def forbidden_character_name(wdpa_df, return_pid=False):
+#     '''
+#     This function is to capture forbidden characters in the field 'NAME'
     
-    Input: WDPA in pandas DataFrame 
-    Output: list with WDPA_PIDs containing forbidden characters in field 'NAME'
-    '''
+#     Input: WDPA in pandas DataFrame 
+#     Output: list with WDPA_PIDs containing forbidden characters in field 'NAME'
+#     '''
 
-    check_field = 'NAME'
+#     check_field = 'NAME'
 
-    return forbidden_character(wdpa_df, check_field, return_pid)
+#     return forbidden_character(wdpa_df, check_field, return_pid)
 
-##############################################
-#### 6.2. Forbidden character - ORIG_NAME ####
-##############################################
+# ##############################################
+# #### 6.2. Forbidden character - ORIG_NAME ####
+# ##############################################
 
-def forbidden_character_orig_name(wdpa_df, return_pid=False):
-    '''
-    This function is to capture forbidden characters in the field 'ORIG_NAME'
+# def forbidden_character_orig_name(wdpa_df, return_pid=False):
+#     '''
+#     This function is to capture forbidden characters in the field 'ORIG_NAME'
     
-    Input: WDPA in pandas DataFrame 
-    Output: list with WDPA_PIDs containing forbidden characters in field 'ORIG_NAME'
-    '''
+#     Input: WDPA in pandas DataFrame 
+#     Output: list with WDPA_PIDs containing forbidden characters in field 'ORIG_NAME'
+#     '''
 
-    check_field = 'ORIG_NAME'
+#     check_field = 'ORIG_NAME'
 
-    return forbidden_character(wdpa_df, check_field, return_pid)
+#     return forbidden_character(wdpa_df, check_field, return_pid)
 
-##########################################
-#### 6.3. Forbidden character - DESIG ####
-##########################################
+# ##########################################
+# #### 6.3. Forbidden character - DESIG ####
+# ##########################################
 
-def forbidden_character_desig(wdpa_df, return_pid=False):
-    '''
-    This function is to capture forbidden characters in the field 'DESIG'
+# def forbidden_character_desig(wdpa_df, return_pid=False):
+#     '''
+#     This function is to capture forbidden characters in the field 'DESIG'
     
-    Input: WDPA in pandas DataFrame 
-    Output: list with WDPA_PIDs containing forbidden characters in field 'DESIG'
-    '''
+#     Input: WDPA in pandas DataFrame 
+#     Output: list with WDPA_PIDs containing forbidden characters in field 'DESIG'
+#     '''
 
-    check_field = 'DESIG'
+#     check_field = 'DESIG'
 
-    return forbidden_character(wdpa_df, check_field, return_pid)
+#     return forbidden_character(wdpa_df, check_field, return_pid)
 
-##############################################
-#### 6.4. Forbidden character - DESIG_ENG ####
-##############################################
+# ##############################################
+# #### 6.4. Forbidden character - DESIG_ENG ####
+# ##############################################
 
-def forbidden_character_desig_eng(wdpa_df, return_pid=False):
-    '''
-    This function is to capture forbidden characters in the field 'DESIG_ENG'
+# def forbidden_character_desig_eng(wdpa_df, return_pid=False):
+#     '''
+#     This function is to capture forbidden characters in the field 'DESIG_ENG'
     
-    Input: WDPA in pandas DataFrame 
-    Output: list with WDPA_PIDs containing forbidden characters in field 'DESIG_ENG'
-    '''
+#     Input: WDPA in pandas DataFrame 
+#     Output: list with WDPA_PIDs containing forbidden characters in field 'DESIG_ENG'
+#     '''
 
-    check_field = 'DESIG_ENG'
+#     check_field = 'DESIG_ENG'
 
-    return forbidden_character(wdpa_df, check_field, return_pid)
+#     return forbidden_character(wdpa_df, check_field, return_pid)
 
-##############################################
-#### 6.5. Forbidden character - MANG_AUTH ####
-##############################################
+# ##############################################
+# #### 6.5. Forbidden character - MANG_AUTH ####
+# ##############################################
 
-def forbidden_character_mang_auth(wdpa_df, return_pid=False):
-    '''
-    This function is to capture forbidden characters in the field 'MANG_AUTH'
+# def forbidden_character_mang_auth(wdpa_df, return_pid=False):
+#     '''
+#     This function is to capture forbidden characters in the field 'MANG_AUTH'
     
-    Input: WDPA in pandas DataFrame 
-    Output: list with WDPA_PIDs containing forbidden characters in field 'MANG_AUTH'
-    '''
+#     Input: WDPA in pandas DataFrame 
+#     Output: list with WDPA_PIDs containing forbidden characters in field 'MANG_AUTH'
+#     '''
 
-    check_field = 'MANG_AUTH'
+#     check_field = 'MANG_AUTH'
 
-    return forbidden_character(wdpa_df, check_field, return_pid)
+#     return forbidden_character(wdpa_df, check_field, return_pid)
 
-##############################################
-#### 6.6. Forbidden character - MANG_PLAN ####
-##############################################
+# ##############################################
+# #### 6.6. Forbidden character - MANG_PLAN ####
+# ##############################################
 
-def forbidden_character_mang_plan(wdpa_df, return_pid=False):
-    '''
-    This function is to capture forbidden characters in the field 'MANG_PLAN'
+# def forbidden_character_mang_plan(wdpa_df, return_pid=False):
+#     '''
+#     This function is to capture forbidden characters in the field 'MANG_PLAN'
     
-    Input: WDPA in pandas DataFrame 
-    Output: list with WDPA_PIDs containing forbidden characters in field 'MANG_PLAN'
-    '''
+#     Input: WDPA in pandas DataFrame 
+#     Output: list with WDPA_PIDs containing forbidden characters in field 'MANG_PLAN'
+#     '''
 
-    check_field = 'MANG_PLAN'
+#     check_field = 'MANG_PLAN'
 
-    return forbidden_character(wdpa_df, check_field, return_pid)
+#     return forbidden_character(wdpa_df, check_field, return_pid)
 
-############################################
-#### 6.7. Forbidden character - SUB_LOC ####
-############################################
+# ############################################
+# #### 6.7. Forbidden character - SUB_LOC ####
+# ############################################
 
-def forbidden_character_sub_loc(wdpa_df, return_pid=False):
-    '''
-    This function is to capture forbidden characters in the field 'SUB_LOC'
+# def forbidden_character_sub_loc(wdpa_df, return_pid=False):
+#     '''
+#     This function is to capture forbidden characters in the field 'SUB_LOC'
     
-    Input: WDPA in pandas DataFrame 
-    Output: list with WDPA_PIDs containing forbidden characters in field 'SUB_LOC'
-    '''
+#     Input: WDPA in pandas DataFrame 
+#     Output: list with WDPA_PIDs containing forbidden characters in field 'SUB_LOC'
+#     '''
 
-    check_field = 'SUB_LOC'
+#     check_field = 'SUB_LOC'
 
-    return forbidden_character(wdpa_df, check_field, return_pid)
+#     return forbidden_character(wdpa_df, check_field, return_pid)
 
 ##############################################
 #### 7. METADATAID: WDPA and Source Table ####
