@@ -1,5 +1,6 @@
 import sys
 from wdpa.qas import *
+from wdpa.stijn import output_errors_to_excel
 
 # load input
 # input_poly = sys.argv[1]
@@ -96,5 +97,7 @@ for name, f in poly:
     if wdpa_pid.size > 0:
         result[name] = find_wdpa_rows(sample, wdpa_pid)
 
+for each in [func[0] for func in poly]:
+        output_errors_to_excel(result, each)
 
 
