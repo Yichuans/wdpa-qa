@@ -61,6 +61,8 @@ INPUT_FIELDS_META = ['METADATAID','DATA_TITLE','RESP_PARTY','VERIFIER','YEAR',
                        'UPDATE_YR', 'LANGUAGE','CHAR_SET','REF_SYSTEM', 'SCALE', 
                        'LINEAGE', 'CITATION','DISCLAIMER', ]
 
+
+
 #####################################################
 #### 1. Convert ArcGIS table to pandas DataFrame ####
 #####################################################
@@ -247,12 +249,12 @@ def area_invalid_too_large_gis(wdpa_df, return_pid=False):
     wdpa_df['GIS_size_check'] = (wdpa_df['REP_AREA'] + wdpa_df['GIS_AREA']) / wdpa_df['REP_AREA']
     
     # Calculate the maximum and minimum allowed values for GIS_size_check using mean and stdev
-    MAX_GIS = wdpa_df['GIS_size_check_stats'].mean() + (2*wdpa_df['GIS_size_check_stats'].std())
-    MIN_GIS = wdpa_df['GIS_size_check_stats'].mean() - (2*wdpa_df['GIS_size_check_stats'].std())
+    max_gis = wdpa_df['GIS_size_check_stats'].mean() + (2*wdpa_df['GIS_size_check_stats'].std())
+    min_gis = wdpa_df['GIS_size_check_stats'].mean() - (2*wdpa_df['GIS_size_check_stats'].std())
 
     # Find the rows with an incorrect GIS_AREA
-    invalid_wdpa_pid = wdpa_df[((wdpa_df['GIS_size_check'] > MAX_GIS) | 
-                       (wdpa_df['GIS_size_check'] < MIN_GIS)) &
+    invalid_wdpa_pid = wdpa_df[((wdpa_df['GIS_size_check'] > max_gis) | 
+                       (wdpa_df['GIS_size_check'] < min_gis)) &
                        (abs(wdpa_df['GIS_AREA']-wdpa_df['REP_AREA']) > MAX_ALLOWED_SIZE_DIFF_KM2)]['WDPA_PID'].values
     
     if return_pid:
@@ -1726,3 +1728,67 @@ def invalid_metadataid_not_in_wdpa(wdpa_df, wdpa_point, wdpa_source, return_pid=
         return invalid_metadataid
     
     return len(invalid_metadataid) >= 1
+
+
+CORE_CHECKS = [
+{'name': 'duplicate_wdpa_pid', 'func': duplicate_wdpa_pid},
+# {'name': 'area_invalid_rep_m_area_marine12', 'func': area_invalid_rep_m_area_marine12},
+{'name': 'rep_m_area_gt_rep_area', 'func': area_invalid_rep_m_area_rep_area},
+{'name': 'no_tk_area_gt_rep_m_area', 'func': area_invalid_no_tk_area_rep_m_area},
+{'name': 'no_take_no_tk_area_rep_m_area', 'func': invalid_no_take_no_tk_area_rep_m_area},
+{'name': 'int_crit_desig_eng_other', 'func': invalid_int_crit_desig_eng_other},
+{'name': 'desig_eng_iucn_cat_other', 'func': invalid_desig_eng_iucn_cat_other},
+{'name': 'dif_name_same_id', 'func': inconsistent_name_same_wdpaid},
+{'name': 'dif_orig_name_same_id', 'func': inconsistent_orig_name_same_wdpaid},
+{'name': 'dif_desig_same_id', 'func': inconsistent_desig_same_wdpaid},
+{'name': 'dif_desig_eng_same_id', 'func': inconsistent_desig_eng_same_wdpaid},
+{'name': 'dif_desig_type_same_id', 'func': inconsistent_desig_type_same_wdpaid},
+{'name': 'dif_iucn_cat_same_id', 'func': inconsistent_iucn_cat_same_wdpaid},
+{'name': 'dif_int_crit_same_id', 'func': inconsistent_int_crit_same_wdpaid},
+{'name': 'dif_no_take_same_id', 'func': inconsistent_no_take_same_wdpaid},
+{'name': 'dif_status_same_id', 'func': inconsistent_status_same_wdpaid},
+{'name': 'dif_status_yr_same_id', 'func': inconsistent_status_yr_same_wdpaid},
+{'name': 'dif_gov_type_same_id', 'func': inconsistent_gov_type_same_wdpaid},
+{'name': 'dif_own_type_same_id', 'func': inconsistent_own_type_same_wdpaid},
+{'name': 'dif_mang_auth_same_id', 'func': inconsistent_mang_auth_same_wdpaid},
+{'name': 'dif_mang_plan_same_id', 'func': inconsistent_mang_plan_same_wdpaid},
+{'name': 'dif_verif_same_id', 'func': inconsistent_verif_same_wdpaid},
+{'name': 'dif_metadataid_same_id', 'func': inconsistent_metadataid_same_wdpaid},
+{'name': 'dif_sub_loc_same_id', 'func': inconsistent_sub_loc_same_wdpaid},
+{'name': 'dif_parent_iso3_same_id', 'func': inconsistent_parent_iso3_same_wdpaid},
+{'name': 'dif_iso3_same_id', 'func': inconsistent_iso3_same_wdpaid},
+{'name': 'ivd_pa_def', 'func': invalid_pa_def},
+{'name': 'ivd_desig_eng_international', 'func': invalid_desig_eng_international},
+{'name': 'ivd_desig_type_international', 'func': invalid_desig_type_international},
+{'name': 'ivd_desig_eng_regional', 'func': invalid_desig_eng_regional},
+{'name': 'ivd_desig_type_regional', 'func': invalid_desig_type_regional},
+{'name': 'ivd_int_crit', 'func': invalid_int_crit_desig_eng_ramsar_whs},
+{'name': 'ivd_desig_type', 'func': invalid_desig_type},
+{'name': 'ivd_iucn_cat', 'func': invalid_iucn_cat},
+{'name': 'ivd_iucn_cat_unesco_whs', 'func': invalid_iucn_cat_unesco_whs},
+{'name': 'ivd_marine', 'func': invalid_marine},
+{'name': 'ivd_no_take_marine0', 'func': invalid_no_take_marine0},
+{'name': 'ivd_no_take_marine12', 'func': invalid_no_take_marine12},
+{'name': 'ivd_no_tk_area_marine', 'func': invalid_no_tk_area_marine},
+{'name': 'ivd_no_tk_area_no_take', 'func': invalid_no_tk_area_no_take},
+{'name': 'ivd_status', 'func': invalid_status},
+{'name': 'ivd_status_yr', 'func': invalid_status_yr},
+{'name': 'ivd_gov_type', 'func': invalid_gov_type},
+{'name': 'ivd_own_type', 'func': invalid_own_type},
+{'name': 'ivd_verif', 'func': invalid_verif},
+{'name': 'ivd_parent_iso3', 'func': invalid_parent_iso3},
+{'name': 'ivd_iso3', 'func': invalid_iso3},
+{'name': 'ivd_status_desig_type', 'func': invalid_status_desig_type},]
+
+AREA_CHECKS = [
+{'name': 'gis_area_gt_rep_area', 'func': area_invalid_too_large_gis},
+{'name': 'rep_area_gt_gis_area', 'func': area_invalid_too_large_rep},
+{'name': 'gis_m_area_gt_rep_m_area', 'func': area_invalid_too_large_gis_m},
+{'name': 'rep_m_area_gt_gis_m_area', 'func': area_invalid_too_large_rep_m},
+{'name': 'tiny_area', 'func': area_invalid_gis_area},
+{'name': 'no_tk_area_gt_gis_m_area', 'func': area_invalid_no_tk_area_gis_m_area},
+{'name': 'gis_m_area_gt_gis_area', 'func': area_invalid_gis_m_area_gis_area},
+{'name': 'wrong_marine', 'func': area_invalid_marine},
+{'name': 'zero_gis_m_area_marine12', 'func': area_invalid_gis_m_area_marine12},]
+
+POLY_CHECKS = CORE_CHECKS + AREA_CHECKS

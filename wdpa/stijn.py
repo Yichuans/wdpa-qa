@@ -8,7 +8,7 @@ from openpyxl.formatting import Rule
 from openpyxl.styles import Font, PatternFill, Border
 from openpyxl.styles.differential import DifferentialStyle
 
-def output_errors_to_excel(main_output, functions_list):
+def output_errors_to_excel(main_output, checks):
     '''
     ## Action point: refactor the conditional formatting
     
@@ -52,7 +52,9 @@ def output_errors_to_excel(main_output, functions_list):
 
     # If the function's name - in the functions_list - is present in the 
     # main_output dictionary, add DataFrame to a new sheet
-    for function_name in functions_list:
+    function_names = [each['name'] for each in checks]
+
+    for function_name in function_names:
         if function_name in main_output:
             ws = wb.create_sheet(function_name)
         # export DataFrame rows to Excel
