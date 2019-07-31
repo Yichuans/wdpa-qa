@@ -1,85 +1,68 @@
 # import package
+import os
+import datetime
 from openpyxl import Workbook
 from openpyxl import load_workbook
 from openpyxl.utils.dataframe import dataframe_to_rows    
 from openpyxl.formatting import Rule
 from openpyxl.styles import Font, PatternFill, Border
 from openpyxl.styles.differential import DifferentialStyle
-import datetime
-import os
 
-def output_errors_to_excel(main_output, function_name):
+def output_errors_to_excel(main_output, functions_list):
     '''
     ## Action point: refactor the conditional formatting
     
-    If the function_name is present in the main_output dictionary 
-    produced by the main function, it means that the WDPA failed the test and
-    contains errors. In the dictionary, the function_name is the 
-    key, and the DataFrame with errors is the value.
+    The functions_list is a list that contains all the names of the 
+    functions (tests) of the WDPA QA. If the function's name is present
+    in the main_output dictionary produced by the main function, 
+    the WDPA failed the test and contains errors.
     
-    The present function, output_errors_to_excel, will lookup whether the function_name
-    is present in the main_output dictionary. If so, it will output
-    the DataFrames to a corresponding sheet in an Excel file and in the Excel Summary sheet
-    the function_name will be added along with text 'Fail'. If function_name is not present,
-    the function_name will be added to the Excel Summary sheet along with text 'Pass'.
-    
-    Dependent on whether there is an Excel file present, an Excel file 
-    will either be created (if not present) or appended (if present) if run on the same day.
-    
+    Function output_errors_to_excel evaluates whether each function's name 
+    in functions_list, is present in the main_output dictionary. 
+    If so, it will output the coresponding DataFrame to a sheet in an 
+    Excel file. In the Excel Summary sheet, the function's name will be 
+    added along with string 'Fail'. Else, the test's name will be added to 
+    the Excel Summary sheet along with string 'Pass'.
+        
     ## Arguments ##
-    main_output --   dictionary created by the main function, containing 
-                     function names and dataframes for tests that failed
+    main_output --    dictionary created by the main function, containing 
+                      functions' names and DataFrames for tests that failed. 
+                      In this dictionary, a function's name is the 'key', and 
+                      the DataFrame with errors is the 'value'.
     
-    function_name -- a string with the name of the function, 
-                     to be checked whether it is present in main_output
-    
-    
+    functions_list -- a list of strings containing all the functions' (tests') 
+                      names of the WDPA QA
+
     ## Example ##
     output_errors_to_excel(main_output='output_31July2019',
-                            function_name='invalid_desig_eng_regional')
+                            functions_list=['invalid_desig_type',
+                            'inconsistent_name_same_wdpaid'])
     '''
-
-
+    
     # set constants - to later add the current day to the filename
     DATE = f"{datetime.datetime.now():%d%B%Y}"
     FILENAME ='WDPA_errors'
     SUFFIX = '.xlsx'
     
-    # Import WDPA rows, that contain errors, into Excel    
-    # Excel sheet present
-    if os.path.isfile(DATE+FILENAME+SUFFIX): 
-        wb = load_workbook(DATE+FILENAME+SUFFIX)
+    # Create the Excel workbook and the Summary sheet
+    wb = Workbook()
+    wb.remove(wb['Sheet']) # remove default sheet
+    wb.create_sheet("Summary",0)
+    wb["Summary"].append(["CHECK","RESULT"]) # enter header for Summary sheet
+
+    # If the function's name - in the functions_list - is present in the 
+    # main_output dictionary, add DataFrame to a new sheet
+    for function_name in functions_list:
         if function_name in main_output:
             ws = wb.create_sheet(function_name)
-            ws.sheet_properties.tabColor = "FF6347" # red tab
-            for row in dataframe_to_rows(main_output[function_name], index=False): # import DataFrame rows
+        # export DataFrame rows to Excel
+            for row in dataframe_to_rows(main_output[function_name], index=False): 
                 ws.append(row)
-            wb["Summary"].append([function_name,"Fail"]) # add test result to Summary sheet
+        # add 'Fail' to Summary sheet
+            wb["Summary"].append([function_name,"Fail"]) 
 
         # function_name is not present in the main_output
         else:
-            wb["Summary"].append([function_name,"Pass"])
-
-    # Excel sheet absent
-    else: 
-        wb = Workbook()
-        if function_name in main_output:
-            ws = wb.create_sheet(function_name)
-            wb.remove(wb['Sheet'])
-            ws.sheet_properties.tabColor = "FA8072" # red tab
-            for row in dataframe_to_rows(main_output[function_name], index=False):
-                ws.append(row)
-            wb.create_sheet("Summary",0)
-            wb["Summary"].sheet_properties.tabColor = "1072BB" # blue tab
-            wb["Summary"].append(["CHECK","RESULT"])
-            wb["Summary"].append([function_name,"Fail"])
-
-        # function_name is not present in the main_output
-        else:
-            wb.create_sheet("Summary",0)
-            wb.remove(wb['Sheet'])
-            wb["Summary"].sheet_properties.tabColor = "1072BB" # blue tab
-            wb["Summary"].append(["CHECK","RESULT"])
             wb["Summary"].append([function_name,"Pass"])
 
     # conditional formatting - red rows for tests that fail
@@ -95,6 +78,9 @@ def output_errors_to_excel(main_output, function_name):
     r = Rule(type="expression", dxf=style_to_apply, stopIfTrue=True) # specify the format of the rule
     r.formula = ['$B2="Pass"'] # value that determines conditional format
     wb["Summary"].conditional_formatting.add("A2:B200", r) # add the formatting     
+    
+    # Extra formatting
+    wb["Summary"].sheet_properties.tabColor = "1072BB" # blue tab   
     
     # Save the workbook
     wb.save(DATE+FILENAME+SUFFIX)
