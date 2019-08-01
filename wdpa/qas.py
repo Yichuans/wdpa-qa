@@ -1729,7 +1729,6 @@ def invalid_metadataid_not_in_wdpa(wdpa_df, wdpa_point, wdpa_source, return_pid=
     
     return len(invalid_metadataid) >= 1
 
-
 core_checks = [
 {'name': 'duplicate_wdpa_pid', 'func': duplicate_wdpa_pid},
 # {'name': 'area_invalid_rep_m_area_marine12', 'func': area_invalid_rep_m_area_marine12},
