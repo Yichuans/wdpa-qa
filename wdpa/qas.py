@@ -112,12 +112,11 @@ iso3_df = pd.read_csv(url, usecols = column_with_iso3)
 
 def invalid_data_import(wdpa_df, input_fields):
     '''
-    Return True if the WDPA feature class attribute table does not contain all expected fields,
-    or are not in the correct order.
-    ''' 
+    Return True if the WDPA feature class attribute table does not 
+    contain all expected fields, or are not in the correct order.
+    '''
 
     return list(wdpa_df) != input_fields
-
 
 #######################################
 #### 2. Utility & hardcoded checks ####
