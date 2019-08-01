@@ -96,36 +96,27 @@ def arcgis_table_to_df(in_fc, input_fields, query=''):
     
     return fc_dataframe
 
-## Use function and assign WDPA tables to variables ##
-# wdpa_df = arcgis_table_to_df(wdpa, input_fields_poly)
-
-## Same variable name for the point data? 
-# wdpa_df = arcgis_table_to_df(wdpa, input_fields_point)
-
-## Different name for WDPA Source Table
-# wdpa_source = arcgis_table_to_df(wdpa, input_fields_source)
 
 #########################################
 ##### 1.1 Obtain allowed ISO3 values ####
 #########################################
 
+# Download from GitHub and store in a pandas DataFrame
 column_with_iso3 = ['alpha-3']
 url = 'https://raw.githubusercontent.com/lukes/ISO-3166-Countries-with-Regional-Codes/master/all/all.csv'
-
-# Store the ISO3 values into a Pandas DataFrame for later use
 iso3_df = pd.read_csv(url, usecols = column_with_iso3)
 
 ###########################################################
 #### 1.2. Verify that the imported data is as expected ####
 ###########################################################
 
-def invalid_data_import(wdpa_df, wdpa_df_point, wdpa_source, input_fields_poly, input_fields_point, input_fields_source):
+def invalid_data_import(wdpa_df, input_fields):
     '''
-    Return True if any of the WDPA tables imported does not contain all expected fields, or is in the wrong order.
-    This test is order-sensitive: if the fields are present but in the wrong order, 
+    Return True if the WDPA feature class attribute table does not contain all expected fields,
+    or are not in the correct order.
     ''' 
 
-    return (list(wdpa_df) != input_fields_poly) | (list(wdpa_df_point) != input_fields_point) | (list(wdpa_source) != input_fields_source)
+    return list(wdpa_df) != input_fields
 
 
 #######################################
@@ -151,20 +142,20 @@ def find_wdpa_rows(wdpa_df, wdpa_pid):
 #### 2.1. Find NaN / NULL / NA ####
 ###################################
 
-def invalid_nan(wdpa_df, return_field, return_pid=False):
-    '''
-    Return True if there is one or more NaNs present in the WDPA
-    Return list of WDPA_PIDs in which a value contains NaN
-    Specify return_field as either 'WDPA_PID' (to check WDPA) 
-    or 'METADATAID' (to check Source Table)
-    '''
+# def invalid_nan(wdpa_df, return_field, return_pid=False):
+#     '''
+#     Return True if there is one or more NaNs present in the WDPA
+#     Return list of WDPA_PIDs in which a value contains NaN
+#     Specify return_field as either 'WDPA_PID' (to check WDPA) 
+#     or 'METADATAID' (to check Source Table)
+#     '''
 
-    invalid_wdpa_pid = wdpa_df[wdpa_df.isnull().values][return_field].values
+#     invalid_wdpa_pid = wdpa_df[wdpa_df.isnull().values][return_field].values
     
-    if return_pid:
-        return invalid_wdpa_pid
+#     if return_pid:
+#         return invalid_wdpa_pid
     
-    return len(invalid_wdpa_pid) >= 1
+#     return len(invalid_wdpa_pid) >= 1
 
 #######################################
 #### 2.2. Find duplicate WDPA_PIDs ####
@@ -1731,7 +1722,7 @@ def invalid_metadataid_not_in_wdpa(wdpa_df, wdpa_point, wdpa_source, return_pid=
 
 core_checks = [
 {'name': 'duplicate_wdpa_pid', 'func': duplicate_wdpa_pid},
-# {'name': 'area_invalid_rep_m_area_marine12', 'func': area_invalid_rep_m_area_marine12},
+{'name': 'area_invalid_rep_m_area_marine12', 'func': area_invalid_rep_m_area_marine12},
 {'name': 'rep_m_area_gt_rep_area', 'func': area_invalid_rep_m_area_rep_area},
 {'name': 'no_tk_area_gt_rep_m_area', 'func': area_invalid_no_tk_area_rep_m_area},
 {'name': 'no_take_no_tk_area_rep_m_area', 'func': invalid_no_take_no_tk_area_rep_m_area},
