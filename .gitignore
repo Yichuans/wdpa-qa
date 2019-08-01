@@ -3,3 +3,4 @@
 .ipynb_checkpoints
 *.xlsx
 temp
+.vscode/settings.json
