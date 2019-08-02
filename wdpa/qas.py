@@ -282,12 +282,12 @@ def area_invalid_too_large_rep(wdpa_df, return_pid=False):
     wdpa_df['REP_size_check'] = (wdpa_df['REP_AREA'] + wdpa_df['GIS_AREA']) / wdpa_df['GIS_AREA']
     
     # Calculate the maximum and minimum allowed values for GIS_size_check using mean and stdev
-    MAX_REP = wdpa_df['REP_size_check_stats'].mean() + (2*wdpa_df['REP_size_check_stats'].std())
-    MIN_REP = wdpa_df['REP_size_check_stats'].mean() - (2*wdpa_df['REP_size_check_stats'].std())
+    max_rep = wdpa_df['REP_size_check_stats'].mean() + (2*wdpa_df['REP_size_check_stats'].std())
+    min_rep = wdpa_df['REP_size_check_stats'].mean() - (2*wdpa_df['REP_size_check_stats'].std())
 
     # Find the rows with an incorrect REP_AREA
-    invalid_wdpa_pid = wdpa_df[((wdpa_df['REP_size_check'] > MAX_REP) | 
-                       (wdpa_df['REP_size_check'] < MIN_REP)) &
+    invalid_wdpa_pid = wdpa_df[((wdpa_df['REP_size_check'] > max_rep) | 
+                       (wdpa_df['REP_size_check'] < min_rep)) &
                        (abs(wdpa_df['GIS_AREA']-wdpa_df['REP_AREA']) > MAX_ALLOWED_SIZE_DIFF_KM2)]['WDPA_PID'].values
     
     if return_pid:
@@ -325,12 +325,12 @@ def area_invalid_too_large_gis_m(wdpa_df, return_pid=False):
     wdpa_df['GIS_M_size_check'] = (wdpa_df['REP_M_AREA'] + wdpa_df['GIS_M_AREA']) / wdpa_df['REP_M_AREA']
     
     # Calculate the maximum and minimum allowed values for GIS_M_size_check using mean and stdev
-    MAX_GIS = wdpa_df['GIS_M_size_check_stats'].mean() + (2*wdpa_df['GIS_M_size_check_stats'].std())
-    MIN_GIS = wdpa_df['GIS_M_size_check_stats'].mean() - (2*wdpa_df['GIS_M_size_check_stats'].std())
+    max_gis = wdpa_df['GIS_M_size_check_stats'].mean() + (2*wdpa_df['GIS_M_size_check_stats'].std())
+    min_gis = wdpa_df['GIS_M_size_check_stats'].mean() - (2*wdpa_df['GIS_M_size_check_stats'].std())
 
     # Find the rows with an incorrect GIS_AREA
-    invalid_wdpa_pid = wdpa_df[((wdpa_df['GIS_M_size_check'] > MAX_GIS) | 
-                       (wdpa_df['GIS_M_size_check'] < MIN_GIS)) &
+    invalid_wdpa_pid = wdpa_df[((wdpa_df['GIS_M_size_check'] > max_gis) | 
+                       (wdpa_df['GIS_M_size_check'] < min_gis)) &
                        (abs(wdpa_df['GIS_M_AREA']-wdpa_df['REP_M_AREA']) > MAX_ALLOWED_SIZE_DIFF_KM2)]['WDPA_PID'].values
     
     if return_pid:
@@ -368,12 +368,12 @@ def area_invalid_too_large_rep_m(wdpa_df, return_pid=False):
     wdpa_df['REP_M_size_check'] = (wdpa_df['REP_M_AREA'] + wdpa_df['GIS_M_AREA']) / wdpa_df['GIS_M_AREA']
     
     # Calculate the maximum and minimum allowed values for REP_M_size_check using mean and stdev
-    MAX_REP = wdpa_df['REP_M_size_check_stats'].mean() + (2*wdpa_df['REP_M_size_check_stats'].std())
-    MIN_REP = wdpa_df['REP_M_size_check_stats'].mean() - (2*wdpa_df['REP_M_size_check_stats'].std())
+    max_rep = wdpa_df['REP_M_size_check_stats'].mean() + (2*wdpa_df['REP_M_size_check_stats'].std())
+    min_rep = wdpa_df['REP_M_size_check_stats'].mean() - (2*wdpa_df['REP_M_size_check_stats'].std())
 
     # Find the rows with an incorrect REP_M_AREA
-    invalid_wdpa_pid = wdpa_df[((wdpa_df['REP_M_size_check'] > MAX_REP) | 
-                       (wdpa_df['REP_M_size_check'] < MIN_REP)) &
+    invalid_wdpa_pid = wdpa_df[((wdpa_df['REP_M_size_check'] > max_rep) | 
+                       (wdpa_df['REP_M_size_check'] < min_rep)) &
                        (abs(wdpa_df['GIS_M_AREA']-wdpa_df['REP_M_AREA']) > MAX_ALLOWED_SIZE_DIFF_KM2)]['WDPA_PID'].values
     
     if return_pid:
@@ -1756,7 +1756,7 @@ core_checks = [
 {'name': 'ivd_iucn_cat', 'func': invalid_iucn_cat},
 {'name': 'ivd_iucn_cat_unesco_whs', 'func': invalid_iucn_cat_unesco_whs},
 {'name': 'ivd_marine', 'func': invalid_marine},
-{'name': 'ivd_no_take_marine0', 'func': invalid_no_take_marine0},
+{'name': 'check_no_take_marine0', 'func': invalid_no_take_marine0},
 {'name': 'ivd_no_take_marine12', 'func': invalid_no_take_marine12},
 {'name': 'ivd_no_tk_area_marine', 'func': invalid_no_tk_area_marine},
 {'name': 'ivd_no_tk_area_no_take', 'func': invalid_no_tk_area_no_take},
