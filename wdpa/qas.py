@@ -1663,13 +1663,13 @@ def area_invalid_rep_m_area_rep_area(wdpa_df, return_pid=False):
 #### 7.1. Invalid: METADATAID present in WDPA, not in Source Table ####
 #######################################################################
 
-def invalid_metadataid_not_in_source_table(wdpa_df, wdpa_source, return_pid=False):
-    '''
-    Return True if METADATAID is present in the WDPA but not in the Source Table
-    Return list of WDPA_PIDs for which the METADATAID is not present in the Source Table
-    '''
+# def invalid_metadataid_not_in_source_table(wdpa_df, wdpa_source, return_pid=False):
+#     '''
+#     Return True if METADATAID is present in the WDPA but not in the Source Table
+#     Return list of WDPA_PIDs for which the METADATAID is not present in the Source Table
+#     '''
         
-    field = 'METADATAID'
+#     field = 'METADATAID'
 
     ########## OPTIONAL ##########
     #### Remove METADATAID = 840 (Russian sites that are restricted and not in Source Table)    
@@ -1681,52 +1681,52 @@ def invalid_metadataid_not_in_source_table(wdpa_df, wdpa_source, return_pid=Fals
     ##############################
 
     # Find invalid WDPA_PIDs
-    invalid_wdpa_pid = wdpa_df[~wdpa_df[field].isin(
-                                wdpa_source[field].values)]['WDPA_PID'].values
+#     invalid_wdpa_pid = wdpa_df[~wdpa_df[field].isin(
+#                                 wdpa_source[field].values)]['WDPA_PID'].values
     
-    if return_pid:
-        return invalid_wdpa_pid
+#     if return_pid:
+#         return invalid_wdpa_pid
 
-    return invalid_wdpa_pid >= 1
+#     return invalid_wdpa_pid >= 1
 
 #######################################################################
 #### 7.2. Invalid: METADATAID present in Source Table, not in WDPA ####
 #### Note: output is METADATAIDs.                                  ####
 #######################################################################
 
-def invalid_metadataid_not_in_wdpa(wdpa_df, wdpa_point, wdpa_source, return_pid=False):
-    '''
-    Return True if METADATAID is present in the Source Table but not in the Source Table
-    Return list of METADATAIDs for which the METADATAID is not present in the Source Table
-    '''
+# def invalid_metadataid_not_in_wdpa(wdpa_df, wdpa_point, wdpa_source, return_pid=False):
+#     '''
+#     Return True if METADATAID is present in the Source Table but not in the Source Table
+#     Return list of METADATAIDs for which the METADATAID is not present in the Source Table
+#     '''
     
-    field = ['METADATAID']
+#     field = ['METADATAID']
 
-    # Concatenate all METADATAIDs of the WDPA point and poly tables
-    field_allowed_values = np.concatenate((wdpa_df[field[0]].values,wdpa_point[field[0]].values),axis=0)
+#     # Concatenate all METADATAIDs of the WDPA point and poly tables
+#     field_allowed_values = np.concatenate((wdpa_df[field[0]].values,wdpa_point[field[0]].values),axis=0)
 
-    ########## OPTIONAL ##########
-    # Remove METADATA = 840 (Russian sites that are restricted and not in Source Table)
-    #metadataid_wdpa = np.concatenate((wdpa_df[field[0]].values,wdpa_point[field[0]].values),axis=0)
-    #field_allowed_values = np.delete(metadataid_wdpa, np.where(metadataid_wdpa == 840), axis=0)
-    #######################
+#     ########## OPTIONAL ##########
+#     # Remove METADATA = 840 (Russian sites that are restricted and not in Source Table)
+#     #metadataid_wdpa = np.concatenate((wdpa_df[field[0]].values,wdpa_point[field[0]].values),axis=0)
+#     #field_allowed_values = np.delete(metadataid_wdpa, np.where(metadataid_wdpa == 840), axis=0)
+#     #######################
     
-    # Find METADATAIDs in the Source Table that are not present in the WDPA
-    invalid_metadataid = wdpa_source[~wdpa_source[field[0]].isin(field_allowed_values)]['METADATAID'].values
+#     # Find METADATAIDs in the Source Table that are not present in the WDPA
+#     invalid_metadataid = wdpa_source[~wdpa_source[field[0]].isin(field_allowed_values)]['METADATAID'].values
     
-    if return_pid:
-        return invalid_metadataid
+#     if return_pid:
+#         return invalid_metadataid
     
-    return len(invalid_metadataid) >= 1
+#     return len(invalid_metadataid) >= 1
 
 core_checks = [
 {'name': 'duplicate_wdpa_pid', 'func': duplicate_wdpa_pid},
-{'name': 'area_invalid_rep_m_area_marine12', 'func': area_invalid_rep_m_area_marine12},
-{'name': 'rep_m_area_gt_rep_area', 'func': area_invalid_rep_m_area_rep_area},
-{'name': 'no_tk_area_gt_rep_m_area', 'func': area_invalid_no_tk_area_rep_m_area},
-{'name': 'no_take_no_tk_area_rep_m_area', 'func': invalid_no_take_no_tk_area_rep_m_area},
-{'name': 'int_crit_desig_eng_other', 'func': invalid_int_crit_desig_eng_other},
-{'name': 'desig_eng_iucn_cat_other', 'func': invalid_desig_eng_iucn_cat_other},
+{'name': 'zero_rep_m_area_marine12', 'func': area_invalid_rep_m_area_marine12},
+{'name': 'ivd_rep_m_area_gt_rep_area', 'func': area_invalid_rep_m_area_rep_area},
+{'name': 'ivd_no_tk_area_gt_rep_m_area', 'func': area_invalid_no_tk_area_rep_m_area},
+{'name': 'ivd_no_tk_area_rep_m_area', 'func': invalid_no_take_no_tk_area_rep_m_area},
+{'name': 'ivd_int_crit_desig_eng_other', 'func': invalid_int_crit_desig_eng_other},
+{'name': 'ivd_desig_eng_iucn_cat_other', 'func': invalid_desig_eng_iucn_cat_other},
 {'name': 'dif_name_same_id', 'func': inconsistent_name_same_wdpaid},
 {'name': 'dif_orig_name_same_id', 'func': inconsistent_orig_name_same_wdpaid},
 {'name': 'dif_desig_same_id', 'func': inconsistent_desig_same_wdpaid},
@@ -1765,8 +1765,8 @@ core_checks = [
 {'name': 'ivd_gov_type', 'func': invalid_gov_type},
 {'name': 'ivd_own_type', 'func': invalid_own_type},
 {'name': 'ivd_verif', 'func': invalid_verif},
-{'name': 'ivd_parent_iso3', 'func': invalid_parent_iso3},
-{'name': 'ivd_iso3', 'func': invalid_iso3},
+{'name': 'check_parent_iso3', 'func': invalid_parent_iso3},
+{'name': 'check_iso3', 'func': invalid_iso3},
 {'name': 'ivd_status_desig_type', 'func': invalid_status_desig_type},]
 
 area_checks = [
@@ -1776,7 +1776,7 @@ area_checks = [
 {'name': 'rep_m_area_gt_gis_m_area', 'func': area_invalid_too_large_rep_m},
 {'name': 'tiny_area', 'func': area_invalid_gis_area},
 {'name': 'no_tk_area_gt_gis_m_area', 'func': area_invalid_no_tk_area_gis_m_area},
-{'name': 'gis_m_area_gt_gis_area', 'func': area_invalid_gis_m_area_gis_area},
+{'name': 'ivd_gis_m_area_gt_gis_area', 'func': area_invalid_gis_m_area_gis_area},
 {'name': 'wrong_marine', 'func': area_invalid_marine},
 {'name': 'zero_gis_m_area_marine12', 'func': area_invalid_gis_m_area_marine12},]
 
