@@ -7,7 +7,7 @@ from wdpa.stijn import output_errors_to_excel
 input_poly = sys.argv[1]
 output_path = sys.argv[2]
 
-# Let us begin
+# Let us welcome our guest of honour
 arcpy.AddMessage('\nAll hail the WDPA\n')
 
 # Convert Polygon table to pandas DataFrame
@@ -31,5 +31,5 @@ for poly_check in poly_checks: # poly_checks is a dictionary with checks' descri
     if wdpa_pid.size > 0:
         result[poly_check['name']] = find_wdpa_rows(poly_df, wdpa_pid)
 
-output_errors_to_excel(result, output_path, poly_checks)
+output_errors_to_excel(result, output_path, poly_checks, 'poly')
 arcpy.AddMessage('The QA checks have finished. \n\nWritten by Stijn den Haan and Yichuan Shi\nAugust 2019')
