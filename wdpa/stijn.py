@@ -8,7 +8,7 @@ from openpyxl.formatting import Rule
 from openpyxl.styles import Font, PatternFill, Border
 from openpyxl.styles.differential import DifferentialStyle
 
-def output_errors_to_excel(result, outpath, checks):
+def output_errors_to_excel(result, outpath, checks, datatype):
     '''
     The functions_list is a list that contains all the names of the 
     functions (tests) of the WDPA QA. If the function's name is present
@@ -33,7 +33,7 @@ def output_errors_to_excel(result, outpath, checks):
     checks --         a dictionary containing all the descriptive names 
                       and function names of the WDPA QA checks
     
-    datatype --       a string specifying what the input type was: e.g. point or poly
+    datatype --       a string specifying the input type: e.g. point or poly
                       This will be added to the Excel file's name.
 
     ## Example ##
@@ -58,7 +58,7 @@ def output_errors_to_excel(result, outpath, checks):
                     return (wb['Summary'].cell(row=cell.row, column=1).row) # return cell's row number
     
     # set constants - to later add the current day to the filename
-    filename = f'{datetime.datetime.now():%d%B%Y_WDPA_QA_checks.xlsx}'
+    filename = f'{datetime.datetime.now().strftime("%d%b%Y")}_WDPA_QA_checks_{datatype}.xlsx'
     output = outpath + os.sep + filename
     
     # Create the Excel workbook and the Summary sheet
@@ -76,47 +76,44 @@ def output_errors_to_excel(result, outpath, checks):
         # export DataFrame rows to Excel
             for row in dataframe_to_rows(result[function_name], index=False): 
                 ws.append(row)
+        # Add a hyperlink to each sheet, to return to the Summary with a single click
+            ws.insert_cols(1) # insert column at first position
+            ws.cell(row=1, column=1).value = 'Return to Summary'
+            ws.cell(row=1, column=1).hyperlink = (f'#Summary!A1')
+            ws.cell(row=1, column=1).style = 'Hyperlink'
         # add 'Check' or 'Fail' to Summary sheet
             if not function_name.startswith('ivd'):
                 wb['Summary'].append([function_name,'Check', len(result[function_name])])
                 ws.sheet_properties.tabColor = '87CEFA' # blue tab
                 link = f'#{function_name}!A1' # create link to cell A1 of function_name tab
-                # add link to the function_name of the Summary sheet
+                # add link to the function_name of the Summary sheet, with hyperlink style
                 wb['Summary'].cell(row=find_row(function_name), column=1).hyperlink = link 
+                wb['Summary'].cell(row=find_row(function_name), column=1).style = 'Hyperlink'
             else:
                 wb['Summary'].append([function_name,'Fail', len(result[function_name])])
-                ws.sheet_properties.tabColor = 'FF6347' # red tab
+                ws.sheet_properties.tabColor = 'F08080' # red tab
                 link = f'#{function_name}!A1' # as above
                 wb['Summary'].cell(row=find_row(function_name), column=1).hyperlink = link
+                wb['Summary'].cell(row=find_row(function_name), column=1).style = 'Hyperlink'
         # add 'Pass' to Summary sheet as no rows with invalid WDPA_PIDs are present
         else:
             wb['Summary'].append([function_name,'Pass'])
 
-    #### REFACTOR THIS ####
-    
-    # conditional formatting - red rows for tests that fail
-    # red_fill = PatternFill(bgColor='FF6347') # specify what colour to load
-    # style_to_apply = DifferentialStyle(fill=red_fill) # specify the style: fill only
-    # r = Rule(type='expression', dxf=style_to_apply, stopIfTrue=True) # specify the format of the rule
-    # r.formula = ['$B2="Fail"'] # value that determines conditional format
-    # wb['Summary'].conditional_formatting.add(f'A2:C{wb['Summary'].max_row}', r) # add the formatting    
-    
-    # # conditional formatting - blue rows for tests that need to be checked
-    # red_fill = PatternFill(bgColor='87CEFA') # specify what colour to load
-    # style_to_apply = DifferentialStyle(fill=red_fill) # specify the style: fill only
-    # r = Rule(type='expression', dxf=style_to_apply, stopIfTrue=True) # specify the format of the rule
-    # r.formula = ['$B2="Check"'] # value that determines conditional format
-    # wb['Summary'].conditional_formatting.add(f'A2:C{wb['Summary'].max_row}', r) # add the formatting    
-    
-    # # conditional formatting - green rows for tests that pass
-    # green_fill = PatternFill(bgColor='00FF00') # specify what colour to load
-    # style_to_apply = DifferentialStyle(fill=green_fill) # specify the style: fill only
-    # r = Rule(type='expression', dxf=style_to_apply, stopIfTrue=True) # specify the format of the rule
-    # r.formula = ['$B2="Pass"'] # value that determines conditional format
-    # wb['Summary'].conditional_formatting.add(f'A2:C{wb['Summary'].max_row}', r) # add the formatting     
+    # Conditional formatting - different colours for Check, Fail, and Pass
+    def add_conditional_formatting(colour, summary_result, sheetname):
+        fill_col = PatternFill(bgColor=colour) # specify colour
+        style_to_apply = DifferentialStyle(fill=fill_col) # specifyl style (fill)
+        r = Rule(type="expression", dxf=style_to_apply, stopIfTrue=True) # specify rule
+        r.formula = [f'$B2="{summary_result}"'] # only search in Column B, starting on second row
+        wb[sheetname].conditional_formatting.add(f'A2:C{wb[sheetname].max_row}', r) # apply formatting
+
+    add_conditional_formatting('87CEFA', 'Check', 'Summary') # blue
+    add_conditional_formatting('F08080', 'Fail', 'Summary') # red
+    add_conditional_formatting('98FB98', 'Pass', 'Summary') # green
     
     # Extra formatting
-    wb['Summary'].sheet_properties.tabColor = '1072BB' # blue tab   
+    wb['Summary'].sheet_properties.tabColor = '000000' # black tab 
+    wb['Summary'].column_dimensions['A'].width = 31 # adjust column A's width
     
     # Save the workbook
     wb.save(output)
