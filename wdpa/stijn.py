@@ -42,11 +42,6 @@ def output_errors_to_excel(result, outpath, checks, datatype):
                            checks=poly_checks,
                            datatype='poly'])
     '''
-    
-    #### Action points - to add:
-    #### - add datatype to filename
-    #### - add hyperlinks to sheets per check
-    #### - (low priority: refactor the conditional formatting)
         
     # Function to find the row of the function_name
     # Required to add a hyperlink of the tab to the 
@@ -57,7 +52,7 @@ def output_errors_to_excel(result, outpath, checks, datatype):
                 if cell.value == function_name: # select the correct cell
                     return (wb['Summary'].cell(row=cell.row, column=1).row) # return cell's row number
     
-    # set constants - to later add the current day to the filename
+    # Set variables - to later add the current day to the filename
     filename = f'{datetime.datetime.now().strftime("%d%b%Y")}_WDPA_QA_checks_{datatype}.xlsx'
     output = outpath + os.sep + filename
     
@@ -78,9 +73,11 @@ def output_errors_to_excel(result, outpath, checks, datatype):
                 ws.append(row)
         # Add a hyperlink to each sheet, to return to the Summary with a single click
             ws.insert_cols(1) # insert column at first position
-            ws.cell(row=1, column=1).value = 'Return to Summary'
+            ws.cell(row=1, column=1).value = 'To Summary'
             ws.cell(row=1, column=1).hyperlink = (f'#Summary!A1')
             ws.cell(row=1, column=1).style = 'Hyperlink'
+            ws.column_dimensions['A'].width = 14 # adjust width of column A
+            ws.freeze_panes = 'B2'
         # add 'Check' or 'Fail' to Summary sheet
             if not function_name.startswith('ivd'):
                 wb['Summary'].append([function_name,'Check', len(result[function_name])])
@@ -101,6 +98,22 @@ def output_errors_to_excel(result, outpath, checks, datatype):
 
     # Conditional formatting - different colours for Check, Fail, and Pass
     def add_conditional_formatting(colour, summary_result, sheetname):
+        '''
+        Add conditional formatting in the Summary sheet in Excel, for each check performed.
+        This will fill cells containing certain values. 
+        Red for failed tests, blue for tests that need to be checked, green for passed tests.
+
+        ## Arguments ##
+        colour --         A string specifying hex colour code (RRGGBB) to use for filling.
+        summary_result -- A string with the summary result, either 'Fail', 'Check', or 'Pass'
+        sheetname --      A string specifying the target sheet for the formatting, i.e. 'Summary'
+
+        ## Example ##
+        add_conditional_formatting(colour='87CEFA',
+        summary_result='Check',
+        sheetname='Summary)
+        '''
+        
         fill_col = PatternFill(bgColor=colour) # specify colour
         style_to_apply = DifferentialStyle(fill=fill_col) # specifyl style (fill)
         r = Rule(type="expression", dxf=style_to_apply, stopIfTrue=True) # specify rule
@@ -114,7 +127,8 @@ def output_errors_to_excel(result, outpath, checks, datatype):
     # Extra formatting
     wb['Summary'].sheet_properties.tabColor = '000000' # black tab 
     wb['Summary'].column_dimensions['A'].width = 31 # adjust column A's width
-    
+    wb['Summary'].freeze_panes = 'A2' # freeze header
+
     # Save the workbook
     wb.save(output)
     return
