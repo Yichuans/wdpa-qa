@@ -8,7 +8,7 @@ Bioinformatics internship • UNEP-WCMC • 10 June --- 9 August 2019
 
 # 1. Invalid `ISO3` check could be improved by separating ISO3 values by ';' when comparing to list of allowed values
 
-### Definitions 
+### Definitions
 
 **Offending fields** are fields (columns) that contain values that do not adhere to the rules set in the WDPA manual.
 - Offending fields are subdivided in **three types**:
@@ -36,6 +36,7 @@ import pandas as pd
 import arcpy
 import datetime
 import os
+import re
 
 #### Load fields present in the WDPA tables ####
 
@@ -154,7 +155,7 @@ def find_wdpa_rows(wdpa_df, wdpa_pid):
 #     if return_pid:
 #         return invalid_wdpa_pid
     
-#     return len(invalid_wdpa_pid) >= 1
+#     return len(invalid_wdpa_pid) > 0
 
 #######################################
 #### 2.2. Find duplicate WDPA_PIDs ####
@@ -188,26 +189,26 @@ def area_invalid_marine(wdpa_df, return_pid=False):
     coast_max = 0.9
     
     # create new column with proportion marine vs total GIS area 
-    wdpa_df['marine_proportion'] = wdpa_df['GIS_M_AREA'] / wdpa_df['GIS_AREA']
+    wdpa_df['marine_GIS_proportion'] = wdpa_df['GIS_M_AREA'] / wdpa_df['GIS_AREA']
     
     def assign_marine_value(wdpa_df):
-        if wdpa_df['marine_proportion'] <= coast_min:
+        if wdpa_df['marine_GIS_proportion'] <= coast_min:
             return '0'
-        elif coast_min < wdpa_df['marine_proportion'] < coast_max:
+        elif coast_min < wdpa_df['marine_GIS_proportion'] < coast_max:
             return '1'
-        elif wdpa_df['marine_proportion'] >= coast_max:
+        elif wdpa_df['marine_GIS_proportion'] >= coast_max:
             return '2'
     
     # calculate the marine_value
-    wdpa_df['marine_value'] = wdpa_df.apply(assign_marine_value, axis=1)
+    wdpa_df['marine_GIS_value'] = wdpa_df.apply(assign_marine_value, axis=1)
     
     # find invalid WDPA_PIDs
-    invalid_wdpa_pid = wdpa_df[wdpa_df['marine_value'] != wdpa_df['MARINE']]['WDPA_PID'].values
+    invalid_wdpa_pid = wdpa_df[wdpa_df['marine_GIS_value'] != wdpa_df['MARINE']]['WDPA_PID'].values
     
     if return_pid:
         return invalid_wdpa_pid
     
-    return len(invalid_wdpa_pid) >= 1
+    return len(invalid_wdpa_pid) > 0
 
 ############################################
 #### 2.4. Invalid: GIS_AREA >> REP_AREA ####
@@ -221,36 +222,38 @@ def area_invalid_too_large_gis(wdpa_df, return_pid=False):
     
     # Set maximum allowed absolute difference between GIS_AREA and REP_AREA (in km2)
     MAX_ALLOWED_SIZE_DIFF_KM2 = 50
-    
-    # Two columns need to be created: one to calculate the mean and stdev without outliers
-    # and another to find WDPA_PIDs with a too large GIS_AREA
-    
-    # Column 1: replace outliers with NaN, then obtain mean and stdev
+
+    # Create two Series:
+    # One to calculate the mean and stdev without outliers
+    # One to use as index, to find WDPA_PIDs with a too large GIS_AREA
+
+    # Compare GIS_AREA to REP_AREA, replace outliers with NaN, then obtain mean and stdev
+    # Settings
     calc =      (wdpa_df['REP_AREA'] + wdpa_df['GIS_AREA']) / wdpa_df['REP_AREA']
     condition = [calc > 100,
-                 calc < 0]
+                calc < 0]
     choice =    [np.nan,np.nan]
-    
-    wdpa_df['GIS_size_check_stats'] = np.select(condition, # produce column without outliers
-                                         choice, 
-                                         default = calc)
 
-    # Column 2: to find WDPA_PIDs with too large GIS_AREA
-    wdpa_df['GIS_size_check'] = (wdpa_df['REP_AREA'] + wdpa_df['GIS_AREA']) / wdpa_df['REP_AREA']
-    
-    # Calculate the maximum and minimum allowed values for GIS_size_check using mean and stdev
-    max_gis = wdpa_df['GIS_size_check_stats'].mean() + (2*wdpa_df['GIS_size_check_stats'].std())
-    min_gis = wdpa_df['GIS_size_check_stats'].mean() - (2*wdpa_df['GIS_size_check_stats'].std())
+    # Produce column without outliers
+    relative_size_stats = pd.Series( 
+        np.select(condition, choice, default = calc))
+
+    # Calculate the maximum and minimum allowed values for relative_size using mean and stdev
+    max_gis = relative_size_stats.mean() + (2*relative_size_stats.std())
+    min_gis = relative_size_stats.mean() - (2*relative_size_stats.std())
+
+    # Series: compare REP_AREA to GIS_AREA
+    relative_size = pd.Series((wdpa_df['REP_AREA'] + wdpa_df['GIS_AREA']) / wdpa_df['REP_AREA'])
 
     # Find the rows with an incorrect GIS_AREA
-    invalid_wdpa_pid = wdpa_df[((wdpa_df['GIS_size_check'] > max_gis) | 
-                       (wdpa_df['GIS_size_check'] < min_gis)) &
-                       (abs(wdpa_df['GIS_AREA']-wdpa_df['REP_AREA']) > MAX_ALLOWED_SIZE_DIFF_KM2)]['WDPA_PID'].values
+    invalid_wdpa_pid= wdpa_df[((relative_size > max_gis) | 
+                    (relative_size < min_gis)) &
+                    (abs(wdpa_df['GIS_AREA']-wdpa_df['REP_AREA']) > MAX_ALLOWED_SIZE_DIFF_KM2)]['WDPA_PID'].values
     
     if return_pid:
         return invalid_wdpa_pid
 
-    return len(invalid_wdpa_pid) >= 1
+    return len(invalid_wdpa_pid) > 0
 
 ############################################
 #### 2.5. Invalid: REP_AREA >> GIS_AREA ####
@@ -264,36 +267,38 @@ def area_invalid_too_large_rep(wdpa_df, return_pid=False):
     
     # Set maximum allowed absolute difference between GIS_AREA and REP_AREA (in km2)
     MAX_ALLOWED_SIZE_DIFF_KM2 = 50
-    
-    # Two columns need to be created: one to calculate the mean and stdev without outliers
-    # and another to find WDPA_PIDs with a too large REP_AREA
-    
-    # Column 1: replace outliers with NaN, then obtain mean and stdev
+
+    # Create two Series:
+    # One to calculate the mean and stdev without outliers
+    # One to use as index, to find WDPA_PIDs with a too large REP_AREA
+
+    # Compare GIS_AREA to REP_AREA, replace outliers with NaN, then obtain mean and stdev
+    # Settings
     calc =      (wdpa_df['REP_AREA'] + wdpa_df['GIS_AREA']) / wdpa_df['GIS_AREA']
     condition = [calc > 100,
-                 calc < 0]
+                calc < 0]
     choice =    [np.nan,np.nan]
-    
-    wdpa_df['REP_size_check_stats'] = np.select(condition, # produce column without outliers
-                                          choice, 
-                                          default = calc)
 
-    # Column 2: to find WDPA_PIDs with too large REP_AREA
-    wdpa_df['REP_size_check'] = (wdpa_df['REP_AREA'] + wdpa_df['GIS_AREA']) / wdpa_df['GIS_AREA']
-    
-    # Calculate the maximum and minimum allowed values for GIS_size_check using mean and stdev
-    max_rep = wdpa_df['REP_size_check_stats'].mean() + (2*wdpa_df['REP_size_check_stats'].std())
-    min_rep = wdpa_df['REP_size_check_stats'].mean() - (2*wdpa_df['REP_size_check_stats'].std())
+    # Produce Series without outliers
+    relative_size_stats = pd.Series( 
+        np.select(condition, choice, default = calc))
+
+    # Calculate the maximum and minimum allowed values for relative_size using mean and stdev
+    max_rep = relative_size_stats.mean() + (2*relative_size_stats.std())
+    min_rep = relative_size_stats.mean() - (2*relative_size_stats.std())
+
+    # Series: compare REP_AREA to GIS_AREA
+    relative_size = pd.Series((wdpa_df['REP_AREA'] + wdpa_df['GIS_AREA']) / wdpa_df['GIS_AREA'])
 
     # Find the rows with an incorrect REP_AREA
-    invalid_wdpa_pid = wdpa_df[((wdpa_df['REP_size_check'] > max_rep) | 
-                       (wdpa_df['REP_size_check'] < min_rep)) &
-                       (abs(wdpa_df['GIS_AREA']-wdpa_df['REP_AREA']) > MAX_ALLOWED_SIZE_DIFF_KM2)]['WDPA_PID'].values
+    invalid_wdpa_pid= wdpa_df[((relative_size > max_rep) | 
+                    (relative_size < min_rep)) &
+                    (abs(wdpa_df['GIS_AREA']-wdpa_df['REP_AREA']) > MAX_ALLOWED_SIZE_DIFF_KM2)]['WDPA_PID'].values
     
     if return_pid:
         return invalid_wdpa_pid
 
-    return len(invalid_wdpa_pid) >= 1
+    return len(invalid_wdpa_pid) > 0
 
 ################################################
 #### 2.6. Invalid: GIS_M_AREA >> REP_M_AREA ####
@@ -307,36 +312,38 @@ def area_invalid_too_large_gis_m(wdpa_df, return_pid=False):
     
     # Set maximum allowed absolute difference between GIS_M_AREA and REP_M_AREA (in km2)
     MAX_ALLOWED_SIZE_DIFF_KM2 = 50
-    
-    # Two columns need to be created: one to calculate the mean and stdev without outliers
-    # and another to find WDPA_PIDs with a too large GIS_M_AREA
-    
-    # Column 1: replace outliers with NaN, then obtain mean and stdev
+
+    # Create two Series:
+    # One to calculate the mean and stdev without outliers
+    # One to use as index, to find WDPA_PIDs with a too large GIS_M_AREA
+
+    # Compare GIS_M_AREA to REP_M_AREA, replace outliers with NaN, then obtain mean and stdev
+    # Settings
     calc =      (wdpa_df['REP_M_AREA'] + wdpa_df['GIS_M_AREA']) / wdpa_df['REP_M_AREA']
     condition = [calc > 100,
-                 calc < 0]
+                calc < 0]
     choice =    [np.nan,np.nan]
-    
-    wdpa_df['GIS_M_size_check_stats'] = np.select(condition, # produce column without outliers
-                                         choice, 
-                                         default = calc)
 
-    # Column 2: to find WDPA_PIDs with too large GIS_AREA
-    wdpa_df['GIS_M_size_check'] = (wdpa_df['REP_M_AREA'] + wdpa_df['GIS_M_AREA']) / wdpa_df['REP_M_AREA']
-    
-    # Calculate the maximum and minimum allowed values for GIS_M_size_check using mean and stdev
-    max_gis = wdpa_df['GIS_M_size_check_stats'].mean() + (2*wdpa_df['GIS_M_size_check_stats'].std())
-    min_gis = wdpa_df['GIS_M_size_check_stats'].mean() - (2*wdpa_df['GIS_M_size_check_stats'].std())
+    # Produce column without outliers
+    relative_size_stats = pd.Series( 
+        np.select(condition, choice, default = calc))
 
-    # Find the rows with an incorrect GIS_AREA
-    invalid_wdpa_pid = wdpa_df[((wdpa_df['GIS_M_size_check'] > max_gis) | 
-                       (wdpa_df['GIS_M_size_check'] < min_gis)) &
-                       (abs(wdpa_df['GIS_M_AREA']-wdpa_df['REP_M_AREA']) > MAX_ALLOWED_SIZE_DIFF_KM2)]['WDPA_PID'].values
+    # Calculate the maximum and minimum allowed values for relative_size using mean and stdev
+    max_gis = relative_size_stats.mean() + (2*relative_size_stats.std())
+    min_gis = relative_size_stats.mean() - (2*relative_size_stats.std())
+
+    # Series: compare REP_M_AREA to GIS_M_AREA
+    relative_size = pd.Series((wdpa_df['REP_M_AREA'] + wdpa_df['GIS_M_AREA']) / wdpa_df['REP_M_AREA'])
+
+    # Find the rows with an incorrect GIS_M_AREA
+    invalid_wdpa_pid= wdpa_df[((relative_size > max_gis) | 
+                    (relative_size < min_gis)) &
+                    (abs(wdpa_df['GIS_M_AREA']-wdpa_df['REP_M_AREA']) > MAX_ALLOWED_SIZE_DIFF_KM2)]['WDPA_PID'].values
     
     if return_pid:
         return invalid_wdpa_pid
 
-    return len(invalid_wdpa_pid) >= 1
+    return len(invalid_wdpa_pid) > 0
 
 ################################################
 #### 2.7. Invalid: REP_M_AREA >> GIS_M_AREA ####
@@ -351,35 +358,37 @@ def area_invalid_too_large_rep_m(wdpa_df, return_pid=False):
     # Set maximum allowed absolute difference between GIS_M_AREA and REP_M_AREA (in km2)
     MAX_ALLOWED_SIZE_DIFF_KM2 = 50
     
-    # Two columns need to be created: one to calculate the mean and stdev without outliers
-    # and another to find WDPA_PIDs with a too large REP_M_AREA
-    
-    # Column 1: replace outliers with NaN, then obtain mean and stdev
+    # Create two Series:
+    # One to calculate the mean and stdev without outliers
+    # One to use as index, to find WDPA_PIDs with a too large REP_M_AREA
+
+    # Compare GIS_M_AREA to REP_M_AREA, replace outliers with NaN, then obtain mean and stdev
+    # Settings
     calc =      (wdpa_df['REP_M_AREA'] + wdpa_df['GIS_M_AREA']) / wdpa_df['GIS_M_AREA']
     condition = [calc > 100,
-                 calc < 0]
+                calc < 0]
     choice =    [np.nan,np.nan]
-    
-    wdpa_df['REP_M_size_check_stats'] = np.select(condition, # produce column without outliers
-                                          choice, 
-                                          default = calc)
 
-    # Column 2: to find WDPA_PIDs with too large REP_M_AREA
-    wdpa_df['REP_M_size_check'] = (wdpa_df['REP_M_AREA'] + wdpa_df['GIS_M_AREA']) / wdpa_df['GIS_M_AREA']
-    
-    # Calculate the maximum and minimum allowed values for REP_M_size_check using mean and stdev
-    max_rep = wdpa_df['REP_M_size_check_stats'].mean() + (2*wdpa_df['REP_M_size_check_stats'].std())
-    min_rep = wdpa_df['REP_M_size_check_stats'].mean() - (2*wdpa_df['REP_M_size_check_stats'].std())
+    # Produce column without outliers
+    relative_size_stats = pd.Series( 
+        np.select(condition, choice, default = calc))
+
+    # Calculate the maximum and minimum allowed values for relative_size using mean and stdev
+    max_gis = relative_size_stats.mean() + (2*relative_size_stats.std())
+    min_gis = relative_size_stats.mean() - (2*relative_size_stats.std())
+
+    # Series: compare REP_M_AREA to GIS_M_AREA
+    relative_size = pd.Series((wdpa_df['REP_M_AREA'] + wdpa_df['GIS_M_AREA']) / wdpa_df['GIS_M_AREA'])
 
     # Find the rows with an incorrect REP_M_AREA
-    invalid_wdpa_pid = wdpa_df[((wdpa_df['REP_M_size_check'] > max_rep) | 
-                       (wdpa_df['REP_M_size_check'] < min_rep)) &
-                       (abs(wdpa_df['GIS_M_AREA']-wdpa_df['REP_M_AREA']) > MAX_ALLOWED_SIZE_DIFF_KM2)]['WDPA_PID'].values
+    invalid_wdpa_pid= wdpa_df[((relative_size > max_gis) | 
+                    (relative_size < min_gis)) &
+                    (abs(wdpa_df['GIS_M_AREA']-wdpa_df['REP_M_AREA']) > MAX_ALLOWED_SIZE_DIFF_KM2)]['WDPA_PID'].values
     
     if return_pid:
         return invalid_wdpa_pid
 
-    return len(invalid_wdpa_pid) >= 1
+    return len(invalid_wdpa_pid) > 0
 
 #######################################################
 #### 2.8. Invalid: GIS_AREA <= 0.0001 km² (100 m²) ####
@@ -401,7 +410,7 @@ def area_invalid_gis_area(wdpa_df, return_pid=False):
     if return_pid:
         return invalid_wdpa_pid
     
-    return len(invalid_wdpa_pid) >= 1
+    return len(invalid_wdpa_pid) > 0
 
 ############################################################
 #### 2.9. Invalid: REP_M_AREA <= 0 when MARINE = 1 or 2 ####
@@ -425,7 +434,7 @@ def area_invalid_rep_m_area_marine12(wdpa_df, return_pid=False):
     if return_pid:
         return invalid_wdpa_pid
     
-    return len(invalid_wdpa_pid) >= 1
+    return len(invalid_wdpa_pid) > 0
 
 ##########################################################
 ## 2.10. Invalid: GIS_M_AREA <= 0 when MARINE = 1 or 2 ###
@@ -449,7 +458,7 @@ def area_invalid_gis_m_area_marine12(wdpa_df, return_pid=False):
     if return_pid:
         return invalid_wdpa_pid
         
-    return len(invalid_wdpa_pid) >= 1
+    return len(invalid_wdpa_pid) > 0
 
 ########################################################
 ## 2.11. Invalid: NO_TAKE, NO_TK_AREA and REP_M_AREA ####
@@ -470,7 +479,7 @@ def invalid_no_take_no_tk_area_rep_m_area(wdpa_df, return_pid=False):
     if return_pid:
         return invalid_wdpa_pid
     
-    return len(invalid_wdpa_pid) >= 1
+    return len(invalid_wdpa_pid) > 0
 
 ############################################################################
 ## 2.12. Invalid: INT_CRIT & DESIG_ENG - non-Ramsar Site, non-WHS sites ####
@@ -497,7 +506,7 @@ def invalid_int_crit_desig_eng_other(wdpa_df, return_pid=False):
     if return_pid:
         return invalid_wdpa_pid
     
-    return len(invalid_wdpa_pid) >= 1
+    return len(invalid_wdpa_pid) > 0
 
 #########################################################################
 #### 2.13. Invalid: DESIG_ENG & IUCN_CAT - non-UNESCO, non-WHS sites ####
@@ -531,7 +540,7 @@ def invalid_desig_eng_iucn_cat_other(wdpa_df, return_pid=False):
     if return_pid:
         return invalid_wdpa_pid
     
-    return len(invalid_wdpa_pid) >= 1
+    return len(invalid_wdpa_pid) > 0
 
 #########################################################
 #### 3. Find inconsistent fields for the same WDPAID ####
@@ -555,12 +564,12 @@ def inconsistent_fields_same_wdpaid(wdpa_df,
     return_pid is set True
 
     ## Arguments ##
-    check_field -- list of the field(s) to check for inconsistency
+    check_field -- string of the field to check for inconsistency
     
     ## Example ##
     inconsistent_fields_same_wdpaid(
         wdpa_df=wdpa_df,
-        check_field=["DESIG_ENG"],
+        check_field="DESIG_ENG",
         return_pid=True):    
     '''
 
@@ -925,11 +934,11 @@ def invalid_value_in_field(wdpa_df, field, field_allowed_values, condition_field
     ## Example ##
     invalid_value_in_field(
         wdpa_df,
-        field=["DESIG_ENG"],
+        field="DESIG_ENG",
         field_allowed_values=["Ramsar Site, Wetland of International Importance", 
                               "UNESCO-MAB Biosphere Reserve", 
                               "World Heritage Site (natural or mixed)],
-        condition_field=["DESIG_TYPE"],
+        condition_field="DESIG_TYPE",
         condition_crit=["International"],
         return_pid=True):
     '''
@@ -946,7 +955,7 @@ def invalid_value_in_field(wdpa_df, field, field_allowed_values, condition_field
         # return list with invalid WDPA_PIDs
         return invalid_wdpa_pid
     
-    return len(invalid_wdpa_pid) >= 1
+    return len(invalid_wdpa_pid) > 0
 	
 #### Child functions ####
 
@@ -1415,14 +1424,14 @@ def area_invalid_size(wdpa_df, field_small_area, field_large_area, return_pid=Fa
     if return_pid is set True
 
     ## Arguments ##
-    field_small_area  -- list of the field to check for size - supposedly smaller
-    field_large_area  -- list of the field to check for size - supposedly larger
+    field_small_area  -- string of the field to check for size - supposedly smaller
+    field_large_area  -- string of the field to check for size - supposedly larger
     
     ## Example ##
     area_invalid_size(
         wdpa_df,
-        field_small_area=["GIS_M_AREA"],
-        field_large_area=["GIS_AREA"],
+        field_small_area="GIS_M_AREA",
+        field_large_area="GIS_AREA",
         return_pid=True):
     '''
     
@@ -1438,7 +1447,7 @@ def area_invalid_size(wdpa_df, field_small_area, field_large_area, return_pid=Fa
     if return_pid:
         return invalid_wdpa_pid
     
-    return len(invalid_wdpa_pid) >= 1
+    return len(invalid_wdpa_pid) > 0
 
 ######################################################
 #### 5.1. Area invalid: NO_TK_AREA and REP_M_AREA ####
@@ -1506,40 +1515,41 @@ def area_invalid_rep_m_area_rep_area(wdpa_df, return_pid=False):
 
 #### Parent function ####
 
-# def forbidden_character(wdpa_df, check_field, return_pid=False):
-#     '''
-#     Factory of functions: this generic function is to be linked to
-#     the family of 'forbidden character' functions stated below. These latter 
-#     functions are to give information on which fields to check and pull 
-#     from the DataFrame. This function is the foundation of the others.
+def forbidden_character(wdpa_df, check_field, return_pid=False):
+    '''
+    Factory of functions: this generic function is to be linked to
+    the family of 'forbidden character' functions stated below. These latter 
+    functions are to give information on which fields to check and pull 
+    from the DataFrame. This function is the foundation of the others.
     
-#     Return True if forbidden characters are found in the DataFrame
+    Return True if forbidden characters are found in the DataFrame
 
-#     Return list of WDPA_PID where forbidden characters occur, if 
-#     return_pid is set True
+    Return list of WDPA_PID where forbidden characters occur, if 
+    return_pid is set True
 
-#     ## Arguments ##
-#     check_field -- list of the field(s) to check for forbidden characters
+    ## Arguments ##
+    check_field -- string of the field to check for forbidden characters
     
-#     ## Example ##
-#     forbidden_character(
-#         wdpa_df,
-#         check_field=["DESIG_ENG"],
-#         return_pid=True):    
-#     '''
+    ## Example ##
+    forbidden_character(
+        wdpa_df,
+        check_field="DESIG_ENG",
+        return_pid=True):    
+    '''
 
-#     # Import regular expression package and the forbidden characters
-#     import re
-#     matches = ['<','>',"?","*","#","\n","\r"]
-#     field_unallowed_values = [re.escape(m) for m in matches] # ensure correct formatting of forbidden characters
+    # Import regular expression package and the forbidden characters
+    forbidden_characters = ['<','>','?','*','\r','\n']
+    forbidden_characters_esc = [re.escape(s) for s in forbidden_characters]
 
-#     # Obtain the WDPA_PIDs with forbidden characters
-#     # invalid_wdpa_pid = wdpa_df[wdpa_df[check_field.str.contains('|'.join(field_unallowed_values))]['WDPA_PID'].values
+    pattern = '|'.join(forbidden_characters_esc)
 
-#     if return_pid:
-#         return invalid_wdpa_pid
+    # Obtain the WDPA_PIDs with forbidden characters
+    invalid_wdpa_pid = wdpa_df[wdpa_df[check_field].str.contains(pattern, case=False)]['WDPA_PID'].values
+
+    if return_pid:
+        return invalid_wdpa_pid
         
-#     return len(invalid_wdpa_pid) >= 1
+    return len(invalid_wdpa_pid) > 0
 
 #### Child functions ####
 
@@ -1547,120 +1557,270 @@ def area_invalid_rep_m_area_rep_area(wdpa_df, return_pid=False):
 #### 6.1. Forbidden character - NAME ####
 #########################################
 
-# def forbidden_character_name(wdpa_df, return_pid=False):
-#     '''
-#     This function is to capture forbidden characters in the field 'NAME'
+def forbidden_character_name(wdpa_df, return_pid=False):
+    '''
+    Capture forbidden characters in the field 'NAME'
     
-#     Input: WDPA in pandas DataFrame 
-#     Output: list with WDPA_PIDs containing forbidden characters in field 'NAME'
-#     '''
+    Input: WDPA in pandas DataFrame 
+    Output: list with WDPA_PIDs containing forbidden characters in field 'NAME'
+    '''
 
-#     check_field = 'NAME'
+    check_field = 'NAME'
 
-#     return forbidden_character(wdpa_df, check_field, return_pid)
-
-# ##############################################
-# #### 6.2. Forbidden character - ORIG_NAME ####
-# ##############################################
-
-# def forbidden_character_orig_name(wdpa_df, return_pid=False):
-#     '''
-#     This function is to capture forbidden characters in the field 'ORIG_NAME'
-    
-#     Input: WDPA in pandas DataFrame 
-#     Output: list with WDPA_PIDs containing forbidden characters in field 'ORIG_NAME'
-#     '''
-
-#     check_field = 'ORIG_NAME'
-
-#     return forbidden_character(wdpa_df, check_field, return_pid)
-
-# ##########################################
-# #### 6.3. Forbidden character - DESIG ####
-# ##########################################
-
-# def forbidden_character_desig(wdpa_df, return_pid=False):
-#     '''
-#     This function is to capture forbidden characters in the field 'DESIG'
-    
-#     Input: WDPA in pandas DataFrame 
-#     Output: list with WDPA_PIDs containing forbidden characters in field 'DESIG'
-#     '''
-
-#     check_field = 'DESIG'
-
-#     return forbidden_character(wdpa_df, check_field, return_pid)
-
-# ##############################################
-# #### 6.4. Forbidden character - DESIG_ENG ####
-# ##############################################
-
-# def forbidden_character_desig_eng(wdpa_df, return_pid=False):
-#     '''
-#     This function is to capture forbidden characters in the field 'DESIG_ENG'
-    
-#     Input: WDPA in pandas DataFrame 
-#     Output: list with WDPA_PIDs containing forbidden characters in field 'DESIG_ENG'
-#     '''
-
-#     check_field = 'DESIG_ENG'
-
-#     return forbidden_character(wdpa_df, check_field, return_pid)
-
-# ##############################################
-# #### 6.5. Forbidden character - MANG_AUTH ####
-# ##############################################
-
-# def forbidden_character_mang_auth(wdpa_df, return_pid=False):
-#     '''
-#     This function is to capture forbidden characters in the field 'MANG_AUTH'
-    
-#     Input: WDPA in pandas DataFrame 
-#     Output: list with WDPA_PIDs containing forbidden characters in field 'MANG_AUTH'
-#     '''
-
-#     check_field = 'MANG_AUTH'
-
-#     return forbidden_character(wdpa_df, check_field, return_pid)
-
-# ##############################################
-# #### 6.6. Forbidden character - MANG_PLAN ####
-# ##############################################
-
-# def forbidden_character_mang_plan(wdpa_df, return_pid=False):
-#     '''
-#     This function is to capture forbidden characters in the field 'MANG_PLAN'
-    
-#     Input: WDPA in pandas DataFrame 
-#     Output: list with WDPA_PIDs containing forbidden characters in field 'MANG_PLAN'
-#     '''
-
-#     check_field = 'MANG_PLAN'
-
-#     return forbidden_character(wdpa_df, check_field, return_pid)
-
-# ############################################
-# #### 6.7. Forbidden character - SUB_LOC ####
-# ############################################
-
-# def forbidden_character_sub_loc(wdpa_df, return_pid=False):
-#     '''
-#     This function is to capture forbidden characters in the field 'SUB_LOC'
-    
-#     Input: WDPA in pandas DataFrame 
-#     Output: list with WDPA_PIDs containing forbidden characters in field 'SUB_LOC'
-#     '''
-
-#     check_field = 'SUB_LOC'
-
-#     return forbidden_character(wdpa_df, check_field, return_pid)
+    return forbidden_character(wdpa_df, check_field, return_pid)
 
 ##############################################
-#### 7. METADATAID: WDPA and Source Table ####
+#### 6.2. Forbidden character - ORIG_NAME ####
+##############################################
+
+def forbidden_character_orig_name(wdpa_df, return_pid=False):
+    '''
+    Capture forbidden characters in the field 'ORIG_NAME'
+    
+    Input: WDPA in pandas DataFrame 
+    Output: list with WDPA_PIDs containing forbidden characters in field 'ORIG_NAME'
+    '''
+
+    check_field = 'ORIG_NAME'
+
+    return forbidden_character(wdpa_df, check_field, return_pid)
+
+##########################################
+#### 6.3. Forbidden character - DESIG ####
+##########################################
+
+def forbidden_character_desig(wdpa_df, return_pid=False):
+    '''
+    Capture forbidden characters in the field 'DESIG'
+    
+    Input: WDPA in pandas DataFrame 
+    Output: list with WDPA_PIDs containing forbidden characters in field 'DESIG'
+    '''
+
+    check_field = 'DESIG'
+
+    return forbidden_character(wdpa_df, check_field, return_pid)
+
+##############################################
+#### 6.4. Forbidden character - DESIG_ENG ####
+##############################################
+
+def forbidden_character_desig_eng(wdpa_df, return_pid=False):
+    '''
+    Capture forbidden characters in the field 'DESIG_ENG'
+    
+    Input: WDPA in pandas DataFrame 
+    Output: list with WDPA_PIDs containing forbidden characters in field 'DESIG_ENG'
+    '''
+
+    check_field = 'DESIG_ENG'
+
+    return forbidden_character(wdpa_df, check_field, return_pid)
+
+##############################################
+#### 6.5. Forbidden character - MANG_AUTH ####
+##############################################
+
+def forbidden_character_mang_auth(wdpa_df, return_pid=False):
+    '''
+    Capture forbidden characters in the field 'MANG_AUTH'
+    
+    Input: WDPA in pandas DataFrame 
+    Output: list with WDPA_PIDs containing forbidden characters in field 'MANG_AUTH'
+    '''
+
+    check_field = 'MANG_AUTH'
+
+    return forbidden_character(wdpa_df, check_field, return_pid)
+
+##############################################
+#### 6.6. Forbidden character - MANG_PLAN ####
+##############################################
+
+def forbidden_character_mang_plan(wdpa_df, return_pid=False):
+    '''
+    Capture forbidden characters in the field 'MANG_PLAN'
+    
+    Input: WDPA in pandas DataFrame 
+    Output: list with WDPA_PIDs containing forbidden characters in field 'MANG_PLAN'
+    '''
+
+    check_field = 'MANG_PLAN'
+
+    return forbidden_character(wdpa_df, check_field, return_pid)
+
+############################################
+#### 6.7. Forbidden character - SUB_LOC ####
+############################################
+
+def forbidden_character_sub_loc(wdpa_df, return_pid=False):
+    '''
+    Capture forbidden characters in the field 'SUB_LOC'
+    
+    Input: WDPA in pandas DataFrame 
+    Output: list with WDPA_PIDs containing forbidden characters in field 'SUB_LOC'
+    '''
+
+    check_field = 'SUB_LOC'
+
+    return forbidden_character(wdpa_df, check_field, return_pid)
+
+########################
+#### 7. NaN present ####
+########################
+
+#### Parent function ####
+
+def nan_present(wdpa_df, check_field, return_pid=False):
+    '''
+    Factory of functions: this generic function is to be linked to
+    the family of 'nan_present' functions stated below. These latter 
+    functions are to give information on which fields to check and pull 
+    from the DataFrame. This function is the foundation of the others.
+    
+    Return True if NaN / NA values are found in the DataFrame
+
+    Return list of WDPA_PID where forbidden characters occur, if 
+    return_pid is set True
+
+    ## Arguments ##
+    check_field -- string of field to be checked for NaN / NA values
+    
+    ## Example ##
+    na_present(
+        wdpa_df,
+        check_field="DESIG_ENG",
+        return_pid=True):    
+    '''
+
+    invalid_wdpa_pid = wdpa_df[pd.isna(wdpa_df[check_field])]['WDPA_PID'].values
+
+    if return_pid:
+        return invalid_wdpa_pid
+    
+    return len(invalid_wdpa_pid) > 0
+
+
+#### Child functions ####
+
+#################################
+#### 7.1. NaN present - NAME ####
+#################################
+
+def nan_present_name(wdpa_df, return_pid=False):
+    '''
+    Capture NaN / NA in the field 'NAME'
+    
+    Input: WDPA in pandas DataFrame 
+    Output: list with WDPA_PIDs containing NaN / NA in field 'NAME'
+    '''
+
+    check_field = 'NAME'
+
+    return nan_present(wdpa_df, check_field, return_pid)
+
+######################################
+#### 7.2. NaN present - ORIG_NAME ####
+######################################
+
+def nan_present_orig_name(wdpa_df, return_pid=False):
+    '''
+    Capture NaN / NA in the field 'ORIG_NAME'
+    
+    Input: WDPA in pandas DataFrame 
+    Output: list with WDPA_PIDs containing NaN / NA in field 'ORIG_NAME'
+    '''
+
+    check_field = 'ORIG_NAME'
+
+    return nan_present(wdpa_df, check_field, return_pid)
+
+##################################
+#### 7.3. NaN present - DESIG ####
+##################################
+
+def nan_present_desig(wdpa_df, return_pid=False):
+    '''
+    Capture NaN / NA in the field 'DESIG'
+    
+    Input: WDPA in pandas DataFrame 
+    Output: list with WDPA_PIDs containing NaN / NA in field 'DESIG'
+    '''
+
+    check_field = 'DESIG'
+
+    return nan_present(wdpa_df, check_field, return_pid)
+
+######################################
+#### 7.4. NaN present - DESIG_ENG ####
+######################################
+
+def nan_present_desig_eng(wdpa_df, return_pid=False):
+    '''
+    Capture NaN / NA in the field 'DESIG_ENG'
+    
+    Input: WDPA in pandas DataFrame 
+    Output: list with WDPA_PIDs containing NaN / NA in field 'DESIG_ENG'
+    '''
+
+    check_field = 'DESIG_ENG'
+
+    return nan_present(wdpa_df, check_field, return_pid)
+
+######################################
+#### 7.5. NaN present - MANG_AUTH ####
+######################################
+
+def nan_present_mang_auth(wdpa_df, return_pid=False):
+    '''
+    Capture NaN / NA in the field 'MANG_AUTH'
+    
+    Input: WDPA in pandas DataFrame 
+    Output: list with WDPA_PIDs containing NaN / NA in field 'MANG_AUTH'
+    '''
+
+    check_field = 'MANG_AUTH'
+
+    return nan_present(wdpa_df, check_field, return_pid)
+
+######################################
+#### 7.6. NaN present - MANG_PLAN ####
+######################################
+
+def nan_present_mang_plan(wdpa_df, return_pid=False):
+    '''
+    Capture NaN / NA in the field 'MANG_PLAN'
+    
+    Input: WDPA in pandas DataFrame 
+    Output: list with WDPA_PIDs containing NaN / NA in field 'MANG_PLAN'
+    '''
+
+    check_field = 'MANG_PLAN'
+
+    return nan_present(wdpa_df, check_field, return_pid)
+
+####################################
+#### 7.7. NaN present - SUB_LOC ####
+####################################
+
+def nan_present_sub_loc(wdpa_df, return_pid=False):
+    '''
+    Capture NaN / NA in the field 'SUB_LOC'
+    
+    Input: WDPA in pandas DataFrame 
+    Output: list with WDPA_PIDs containing NaN / NA in field 'SUB_LOC'
+    '''
+
+    check_field = 'SUB_LOC'
+
+    return nan_present(wdpa_df, check_field, return_pid)
+
+##############################################
+#### 8. METADATAID: WDPA and Source Table ####
 ##############################################
 
 #######################################################################
-#### 7.1. Invalid: METADATAID present in WDPA, not in Source Table ####
+#### 8.1. Invalid: METADATAID present in WDPA, not in Source Table ####
 #######################################################################
 
 # def invalid_metadataid_not_in_source_table(wdpa_df, wdpa_source, return_pid=False):
@@ -1687,10 +1847,10 @@ def area_invalid_rep_m_area_rep_area(wdpa_df, return_pid=False):
 #     if return_pid:
 #         return invalid_wdpa_pid
 
-#     return invalid_wdpa_pid >= 1
+#     return invalid_wdpa_pid > 0
 
 #######################################################################
-#### 7.2. Invalid: METADATAID present in Source Table, not in WDPA ####
+#### 8.2. Invalid: METADATAID present in Source Table, not in WDPA ####
 #### Note: output is METADATAIDs.                                  ####
 #######################################################################
 
@@ -1717,7 +1877,7 @@ def area_invalid_rep_m_area_rep_area(wdpa_df, return_pid=False):
 #     if return_pid:
 #         return invalid_metadataid
     
-#     return len(invalid_metadataid) >= 1
+#     return len(invalid_metadataid) > 0
 
 core_checks = [
 {'name': 'duplicate_wdpa_pid', 'func': duplicate_wdpa_pid},
@@ -1767,7 +1927,21 @@ core_checks = [
 {'name': 'ivd_verif', 'func': invalid_verif},
 {'name': 'check_parent_iso3', 'func': invalid_parent_iso3},
 {'name': 'check_iso3', 'func': invalid_iso3},
-{'name': 'ivd_status_desig_type', 'func': invalid_status_desig_type},]
+{'name': 'ivd_status_desig_type', 'func': invalid_status_desig_type},
+{'name': 'ivd_character_name', 'func': forbidden_character_name},
+{'name': 'ivd_character_orig_name', 'func': forbidden_character_orig_name},
+{'name': 'ivd_character_desig', 'func': forbidden_character_desig},
+{'name': 'ivd_character_desig_eng', 'func': forbidden_character_desig_eng},
+{'name': 'ivd_character_mang_auth', 'func': forbidden_character_mang_auth},
+{'name': 'ivd_character_mang_plan', 'func': forbidden_character_mang_plan},
+{'name': 'ivd_character_sub_loc', 'func': forbidden_character_sub_loc},
+{'name': 'nan_present_name', 'func': nan_present_name},
+{'name': 'nan_present_orig_name', 'func': nan_present_orig_name},
+{'name': 'nan_present_desig', 'func': nan_present_desig},
+{'name': 'nan_present_desig_eng', 'func': nan_present_desig_eng},
+{'name': 'nan_present_mang_auth', 'func': nan_present_mang_auth},
+{'name': 'nan_present_mang_plan', 'func': nan_present_mang_plan},
+{'name': 'nan_present_sub_loc', 'func': nan_present_sub_loc},]
 
 area_checks = [
 {'name': 'gis_area_gt_rep_area', 'func': area_invalid_too_large_gis},
@@ -1777,19 +1951,8 @@ area_checks = [
 {'name': 'tiny_area', 'func': area_invalid_gis_area},
 {'name': 'no_tk_area_gt_gis_m_area', 'func': area_invalid_no_tk_area_gis_m_area},
 {'name': 'ivd_gis_m_area_gt_gis_area', 'func': area_invalid_gis_m_area_gis_area},
-{'name': 'wrong_marine', 'func': area_invalid_marine},
-{'name': 'zero_gis_m_area_marine12', 'func': area_invalid_gis_m_area_marine12},]
-
-# prepare loading different checks
-
-# ('forbidden_character', forbidden_character),
-# ('forbidden_character_name', forbidden_character_name),
-# ('forbidden_character_orig_name', forbidden_character_orig_name),
-# ('forbidden_character_desig', forbidden_character_desig),
-# ('forbidden_character_desig_eng', forbidden_character_desig_eng),
-# ('forbidden_character_mang_auth', forbidden_character_mang_auth),
-# ('forbidden_character_mang_plan', forbidden_character_mang_plan),
-# ('forbidden_character_sub_loc', forbidden_character_sub_loc)
+{'name': 'zero_gis_m_area_marine12', 'func': area_invalid_gis_m_area_marine12},
+{'name': 'wrong_marine', 'func': area_invalid_marine},]
 
 poly_checks = core_checks + area_checks
 pt_checks = core_checks
