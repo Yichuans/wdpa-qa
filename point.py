@@ -31,5 +31,7 @@ for pt_check in pt_checks: # pt_checks is a dictionary with checks' descriptive 
     if wdpa_pid.size > 0:
         result[pt_check['name']] = find_wdpa_rows(pt_df, wdpa_pid)
 
+# Write output to file
+arcpy.AddMessage('Writing output to Excel')
 output_errors_to_excel(result, output_path, pt_checks, 'point')
-arcpy.AddMessage('The QA checks have finished. \n\nWritten by Stijn den Haan and Yichuan Shi\nAugust 2019')
+arcpy.AddMessage('\nThe QA checks have finished. \n\nWritten by Stijn den Haan and Yichuan Shi\nAugust 2019')

@@ -31,5 +31,7 @@ for poly_check in poly_checks: # poly_checks is a dictionary with checks' descri
     if wdpa_pid.size > 0:
         result[poly_check['name']] = find_wdpa_rows(poly_df, wdpa_pid)
 
+# Write output to file
+arcpy.AddMessage('Writing output to Excel')
 output_errors_to_excel(result, output_path, poly_checks, 'poly')
-arcpy.AddMessage('The QA checks have finished. \n\nWritten by Stijn den Haan and Yichuan Shi\nAugust 2019')
+arcpy.AddMessage('\nThe QA checks have finished. \n\nWritten by Stijn den Haan and Yichuan Shi\nAugust 2019')
