@@ -365,8 +365,30 @@ def area_invalid_gis_area(wdpa_df, return_pid=False):
     
     return len(invalid_wdpa_pid) > 0
 
+#######################################################
+#### 2.8. Invalid: REP_AREA <= 0.0001 km² (100 m²) ####
+#######################################################
+
+def area_invalid_rep_area(wdpa_df, return_pid=False):
+    '''
+    Return True if REP_AREA is smaller than 0.0001 km²
+    Return list of WDPA_PIDs where REP_AREA is smaller than 0.0001 km², if return_pid=True
+    '''
+    
+    # Arguments
+    size_threshold = 0.0001
+    field_rep_area = 'REP_AREA'
+    
+    # Find invalid WDPA_PIDs
+    invalid_wdpa_pid = wdpa_df[wdpa_df[field_rep_area] <= size_threshold]['WDPA_PID'].values
+    
+    if return_pid:
+        return invalid_wdpa_pid
+    
+    return len(invalid_wdpa_pid) > 0
+
 ############################################################
-#### 2.8. Invalid: REP_M_AREA <= 0 when MARINE = 1 or 2 ####
+#### 2.9. Invalid: REP_M_AREA <= 0 when MARINE = 1 or 2 ####
 ############################################################
 
 def area_invalid_rep_m_area_marine12(wdpa_df, return_pid=False):
@@ -390,7 +412,7 @@ def area_invalid_rep_m_area_marine12(wdpa_df, return_pid=False):
     return len(invalid_wdpa_pid) > 0
 
 ##########################################################
-## 2.9. Invalid: GIS_M_AREA <= 0 when MARINE = 1 or 2 ###
+## 2.10. Invalid: GIS_M_AREA <= 0 when MARINE = 1 or 2 ###
 ##########################################################
 
 def area_invalid_gis_m_area_marine12(wdpa_df, return_pid=False):
@@ -414,7 +436,7 @@ def area_invalid_gis_m_area_marine12(wdpa_df, return_pid=False):
     return len(invalid_wdpa_pid) > 0
 
 ########################################################
-## 2.10. Invalid: NO_TAKE, NO_TK_AREA and REP_M_AREA ####
+## 2.11. Invalid: NO_TAKE, NO_TK_AREA and REP_M_AREA ####
 ########################################################
 
 def invalid_no_take_no_tk_area_rep_m_area(wdpa_df, return_pid=False):
@@ -435,7 +457,7 @@ def invalid_no_take_no_tk_area_rep_m_area(wdpa_df, return_pid=False):
     return len(invalid_wdpa_pid) > 0
 
 ############################################################################
-## 2.11. Invalid: INT_CRIT & DESIG_ENG - non-Ramsar Site, non-WHS sites ####
+## 2.12. Invalid: INT_CRIT & DESIG_ENG - non-Ramsar Site, non-WHS sites ####
 ############################################################################
 
 def invalid_int_crit_desig_eng_other(wdpa_df, return_pid=False):
@@ -462,7 +484,7 @@ def invalid_int_crit_desig_eng_other(wdpa_df, return_pid=False):
     return len(invalid_wdpa_pid) > 0
 
 #########################################################################
-#### 2.12. Invalid: DESIG_ENG & IUCN_CAT - non-UNESCO, non-WHS sites ####
+#### 2.13. Invalid: DESIG_ENG & IUCN_CAT - non-UNESCO, non-WHS sites ####
 #########################################################################
 
 def invalid_desig_eng_iucn_cat_other(wdpa_df, return_pid=False):
@@ -1834,6 +1856,7 @@ def nan_present_sub_loc(wdpa_df, return_pid=False):
 
 core_checks = [
 {'name': 'duplicate_wdpa_pid', 'func': duplicate_wdpa_pid},
+{'name': 'tiny_rep_area', 'func': area_invalid_rep_area},
 {'name': 'zero_rep_m_area_marine12', 'func': area_invalid_rep_m_area_marine12},
 {'name': 'ivd_rep_m_area_gt_rep_area', 'func': area_invalid_rep_m_area_rep_area},
 {'name': 'ivd_no_tk_area_gt_rep_m_area', 'func': area_invalid_no_tk_area_rep_m_area},
@@ -1901,7 +1924,7 @@ area_checks = [
 {'name': 'rep_area_gt_gis_area', 'func': area_invalid_too_large_rep},
 {'name': 'gis_m_area_gt_rep_m_area', 'func': area_invalid_too_large_gis_m},
 {'name': 'rep_m_area_gt_gis_m_area', 'func': area_invalid_too_large_rep_m},
-{'name': 'tiny_area', 'func': area_invalid_gis_area},
+{'name': 'tiny_gis_area', 'func': area_invalid_gis_area},
 {'name': 'no_tk_area_gt_gis_m_area', 'func': area_invalid_no_tk_area_gis_m_area},
 {'name': 'ivd_gis_m_area_gt_gis_area', 'func': area_invalid_gis_m_area_gis_area},
 {'name': 'zero_gis_m_area_marine12', 'func': area_invalid_gis_m_area_marine12},
