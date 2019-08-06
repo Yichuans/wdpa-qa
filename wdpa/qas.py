@@ -4,10 +4,6 @@ Author: Stijn den Haan
 Supervisor: Yichuan Shi
 Bioinformatics internship • UNEP-WCMC • 10 June --- 9 August 2019
 
-### Action points
-
-# 1. Invalid `ISO3` check could be improved by separating ISO3 values by ';' when comparing to list of allowed values
-
 ### Definitions
 
 **Offending fields** are fields (columns) that contain values that do not adhere to the rules set in the WDPA manual.
@@ -107,18 +103,6 @@ column_with_iso3 = ['alpha-3']
 url = 'https://raw.githubusercontent.com/lukes/ISO-3166-Countries-with-Regional-Codes/master/all/all.csv'
 iso3_df = pd.read_csv(url, usecols = column_with_iso3)
 
-###########################################################
-#### 1.2. Verify that the imported data is as expected ####
-###########################################################
-
-def invalid_data_import(wdpa_df, input_fields):
-    '''
-    Return True if the WDPA feature class attribute table does not 
-    contain all expected fields, or are not in the correct order.
-    '''
-
-    return list(wdpa_df) != input_fields
-
 #######################################
 #### 2. Utility & hardcoded checks ####
 #######################################
@@ -137,28 +121,9 @@ def find_wdpa_rows(wdpa_df, wdpa_pid):
     '''
     
     return wdpa_df[wdpa_df['WDPA_PID'].isin(wdpa_pid)]
-	
-###################################
-#### 2.1. Find NaN / NULL / NA ####
-###################################
-
-# def invalid_nan(wdpa_df, return_field, return_pid=False):
-#     '''
-#     Return True if there is one or more NaNs present in the WDPA
-#     Return list of WDPA_PIDs in which a value contains NaN
-#     Specify return_field as either 'WDPA_PID' (to check WDPA) 
-#     or 'METADATAID' (to check Source Table)
-#     '''
-
-#     invalid_wdpa_pid = wdpa_df[wdpa_df.isnull().values][return_field].values
-    
-#     if return_pid:
-#         return invalid_wdpa_pid
-    
-#     return len(invalid_wdpa_pid) > 0
 
 #######################################
-#### 2.2. Find duplicate WDPA_PIDs ####
+#### 2.1. Find duplicate WDPA_PIDs ####
 #######################################
 
 def duplicate_wdpa_pid(wdpa_df, return_pid=False):
@@ -175,7 +140,7 @@ def duplicate_wdpa_pid(wdpa_df, return_pid=False):
     return wdpa_df['WDPA_PID'].nunique() != wdpa_df.index.size # this returns True if there are WDPA_PID duplicates
 
 ###########################################################################
-#### 2.3. Invalid: MARINE designation based on GIS_AREA and GIS_M_AREA ####
+#### 2.2. Invalid: MARINE designation based on GIS_AREA and GIS_M_AREA ####
 ###########################################################################
 
 def area_invalid_marine(wdpa_df, return_pid=False):
@@ -211,7 +176,7 @@ def area_invalid_marine(wdpa_df, return_pid=False):
     return len(invalid_wdpa_pid) > 0
 
 ############################################
-#### 2.4. Invalid: GIS_AREA >> REP_AREA ####
+#### 2.3. Invalid: GIS_AREA >> REP_AREA ####
 ############################################
 
 def area_invalid_too_large_gis(wdpa_df, return_pid=False):
@@ -238,17 +203,14 @@ def area_invalid_too_large_gis(wdpa_df, return_pid=False):
     relative_size_stats = pd.Series( 
         np.select(condition, choice, default = calc))
 
-    # Calculate the maximum and minimum allowed values for relative_size using mean and stdev
+    # Calculate the maximum allowed values for relative_size using mean and stdev
     max_gis = relative_size_stats.mean() + (2*relative_size_stats.std())
-    min_gis = relative_size_stats.mean() - (2*relative_size_stats.std())
 
     # Series: compare REP_AREA to GIS_AREA
     relative_size = pd.Series((wdpa_df['REP_AREA'] + wdpa_df['GIS_AREA']) / wdpa_df['REP_AREA'])
 
     # Find the rows with an incorrect GIS_AREA
-    invalid_wdpa_pid= wdpa_df[((relative_size > max_gis) | 
-                    (relative_size < min_gis)) &
-                    (abs(wdpa_df['GIS_AREA']-wdpa_df['REP_AREA']) > MAX_ALLOWED_SIZE_DIFF_KM2)]['WDPA_PID'].values
+    invalid_wdpa_pid= wdpa_df[(relative_size > max_gis) & (abs(wdpa_df['GIS_AREA']-wdpa_df['REP_AREA']) > MAX_ALLOWED_SIZE_DIFF_KM2)]['WDPA_PID'].values
     
     if return_pid:
         return invalid_wdpa_pid
@@ -256,7 +218,7 @@ def area_invalid_too_large_gis(wdpa_df, return_pid=False):
     return len(invalid_wdpa_pid) > 0
 
 ############################################
-#### 2.5. Invalid: REP_AREA >> GIS_AREA ####
+#### 2.4. Invalid: REP_AREA >> GIS_AREA ####
 ############################################
 
 def area_invalid_too_large_rep(wdpa_df, return_pid=False):
@@ -285,15 +247,12 @@ def area_invalid_too_large_rep(wdpa_df, return_pid=False):
 
     # Calculate the maximum and minimum allowed values for relative_size using mean and stdev
     max_rep = relative_size_stats.mean() + (2*relative_size_stats.std())
-    min_rep = relative_size_stats.mean() - (2*relative_size_stats.std())
 
     # Series: compare REP_AREA to GIS_AREA
     relative_size = pd.Series((wdpa_df['REP_AREA'] + wdpa_df['GIS_AREA']) / wdpa_df['GIS_AREA'])
 
     # Find the rows with an incorrect REP_AREA
-    invalid_wdpa_pid= wdpa_df[((relative_size > max_rep) | 
-                    (relative_size < min_rep)) &
-                    (abs(wdpa_df['GIS_AREA']-wdpa_df['REP_AREA']) > MAX_ALLOWED_SIZE_DIFF_KM2)]['WDPA_PID'].values
+    invalid_wdpa_pid= wdpa_df[(relative_size > max_rep) & (abs(wdpa_df['REP_AREA']-wdpa_df['GIS_AREA']) > MAX_ALLOWED_SIZE_DIFF_KM2)]['WDPA_PID'].values
     
     if return_pid:
         return invalid_wdpa_pid
@@ -301,7 +260,7 @@ def area_invalid_too_large_rep(wdpa_df, return_pid=False):
     return len(invalid_wdpa_pid) > 0
 
 ################################################
-#### 2.6. Invalid: GIS_M_AREA >> REP_M_AREA ####
+#### 2.5. Invalid: GIS_M_AREA >> REP_M_AREA ####
 ################################################
 
 def area_invalid_too_large_gis_m(wdpa_df, return_pid=False):
@@ -330,15 +289,12 @@ def area_invalid_too_large_gis_m(wdpa_df, return_pid=False):
 
     # Calculate the maximum and minimum allowed values for relative_size using mean and stdev
     max_gis = relative_size_stats.mean() + (2*relative_size_stats.std())
-    min_gis = relative_size_stats.mean() - (2*relative_size_stats.std())
 
     # Series: compare REP_M_AREA to GIS_M_AREA
     relative_size = pd.Series((wdpa_df['REP_M_AREA'] + wdpa_df['GIS_M_AREA']) / wdpa_df['REP_M_AREA'])
 
     # Find the rows with an incorrect GIS_M_AREA
-    invalid_wdpa_pid= wdpa_df[((relative_size > max_gis) | 
-                    (relative_size < min_gis)) &
-                    (abs(wdpa_df['GIS_M_AREA']-wdpa_df['REP_M_AREA']) > MAX_ALLOWED_SIZE_DIFF_KM2)]['WDPA_PID'].values
+    invalid_wdpa_pid= wdpa_df[(relative_size > max_gis) & (abs(wdpa_df['GIS_M_AREA']-wdpa_df['REP_M_AREA']) > MAX_ALLOWED_SIZE_DIFF_KM2)]['WDPA_PID'].values
     
     if return_pid:
         return invalid_wdpa_pid
@@ -346,7 +302,7 @@ def area_invalid_too_large_gis_m(wdpa_df, return_pid=False):
     return len(invalid_wdpa_pid) > 0
 
 ################################################
-#### 2.7. Invalid: REP_M_AREA >> GIS_M_AREA ####
+#### 2.6. Invalid: REP_M_AREA >> GIS_M_AREA ####
 ################################################
 
 def area_invalid_too_large_rep_m(wdpa_df, return_pid=False):
@@ -374,24 +330,21 @@ def area_invalid_too_large_rep_m(wdpa_df, return_pid=False):
         np.select(condition, choice, default = calc))
 
     # Calculate the maximum and minimum allowed values for relative_size using mean and stdev
-    max_gis = relative_size_stats.mean() + (2*relative_size_stats.std())
-    min_gis = relative_size_stats.mean() - (2*relative_size_stats.std())
+    max_rep = relative_size_stats.mean() + (2*relative_size_stats.std())
 
     # Series: compare REP_M_AREA to GIS_M_AREA
     relative_size = pd.Series((wdpa_df['REP_M_AREA'] + wdpa_df['GIS_M_AREA']) / wdpa_df['GIS_M_AREA'])
 
     # Find the rows with an incorrect REP_M_AREA
-    invalid_wdpa_pid= wdpa_df[((relative_size > max_gis) | 
-                    (relative_size < min_gis)) &
-                    (abs(wdpa_df['GIS_M_AREA']-wdpa_df['REP_M_AREA']) > MAX_ALLOWED_SIZE_DIFF_KM2)]['WDPA_PID'].values
-    
+    invalid_wdpa_pid= wdpa_df[(relative_size > max_rep) & (abs(wdpa_df['REP_M_AREA']-wdpa_df['GIS_M_AREA']) > MAX_ALLOWED_SIZE_DIFF_KM2)]['WDPA_PID'].values
+
     if return_pid:
         return invalid_wdpa_pid
 
     return len(invalid_wdpa_pid) > 0
 
 #######################################################
-#### 2.8. Invalid: GIS_AREA <= 0.0001 km² (100 m²) ####
+#### 2.7. Invalid: GIS_AREA <= 0.0001 km² (100 m²) ####
 #######################################################
 
 def area_invalid_gis_area(wdpa_df, return_pid=False):
@@ -413,7 +366,7 @@ def area_invalid_gis_area(wdpa_df, return_pid=False):
     return len(invalid_wdpa_pid) > 0
 
 ############################################################
-#### 2.9. Invalid: REP_M_AREA <= 0 when MARINE = 1 or 2 ####
+#### 2.8. Invalid: REP_M_AREA <= 0 when MARINE = 1 or 2 ####
 ############################################################
 
 def area_invalid_rep_m_area_marine12(wdpa_df, return_pid=False):
@@ -437,7 +390,7 @@ def area_invalid_rep_m_area_marine12(wdpa_df, return_pid=False):
     return len(invalid_wdpa_pid) > 0
 
 ##########################################################
-## 2.10. Invalid: GIS_M_AREA <= 0 when MARINE = 1 or 2 ###
+## 2.9. Invalid: GIS_M_AREA <= 0 when MARINE = 1 or 2 ###
 ##########################################################
 
 def area_invalid_gis_m_area_marine12(wdpa_df, return_pid=False):
@@ -461,7 +414,7 @@ def area_invalid_gis_m_area_marine12(wdpa_df, return_pid=False):
     return len(invalid_wdpa_pid) > 0
 
 ########################################################
-## 2.11. Invalid: NO_TAKE, NO_TK_AREA and REP_M_AREA ####
+## 2.10. Invalid: NO_TAKE, NO_TK_AREA and REP_M_AREA ####
 ########################################################
 
 def invalid_no_take_no_tk_area_rep_m_area(wdpa_df, return_pid=False):
@@ -482,7 +435,7 @@ def invalid_no_take_no_tk_area_rep_m_area(wdpa_df, return_pid=False):
     return len(invalid_wdpa_pid) > 0
 
 ############################################################################
-## 2.12. Invalid: INT_CRIT & DESIG_ENG - non-Ramsar Site, non-WHS sites ####
+## 2.11. Invalid: INT_CRIT & DESIG_ENG - non-Ramsar Site, non-WHS sites ####
 ############################################################################
 
 def invalid_int_crit_desig_eng_other(wdpa_df, return_pid=False):
@@ -509,7 +462,7 @@ def invalid_int_crit_desig_eng_other(wdpa_df, return_pid=False):
     return len(invalid_wdpa_pid) > 0
 
 #########################################################################
-#### 2.13. Invalid: DESIG_ENG & IUCN_CAT - non-UNESCO, non-WHS sites ####
+#### 2.12. Invalid: DESIG_ENG & IUCN_CAT - non-UNESCO, non-WHS sites ####
 #########################################################################
 
 def invalid_desig_eng_iucn_cat_other(wdpa_df, return_pid=False):
