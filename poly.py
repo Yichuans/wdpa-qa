@@ -1,6 +1,6 @@
 # Load packages and modules
 import sys, arcpy
-from wdpa.qas import arcgis_table_to_df, find_wdpa_rows, poly_checks, INPUT_FIELDS_POLY
+from wdpa.qas import arcgis_table_to_df, find_wdpa_rows, poly_checks, INPUT_FIELDS_POLY, invalid_data_import
 from wdpa.stijn import output_errors_to_excel
 
 # Load input
@@ -14,6 +14,11 @@ arcpy.AddMessage('\nAll hail the WDPA\n')
 arcpy.AddMessage('Converting to pandas DataFrame')
 poly_df = arcgis_table_to_df(input_poly, INPUT_FIELDS_POLY)
 result = dict()
+
+# Verify whether data import is correct. If not, exit the programme.
+if invalid_data_import(poly_df, INPUT_FIELDS_POLY):
+        arcpy.AddMessage('ERROR: the list of fields in the Polygon table is incorrect - did you add Point instead of Polygon data?')
+        sys.exit()
 
 # Run the checks
 arcpy.AddMessage('--- Running QA checks ---')

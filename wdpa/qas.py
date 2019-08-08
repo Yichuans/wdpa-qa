@@ -103,6 +103,18 @@ column_with_iso3 = ['alpha-3']
 url = 'https://raw.githubusercontent.com/lukes/ISO-3166-Countries-with-Regional-Codes/master/all/all.csv'
 iso3_df = pd.read_csv(url, usecols = column_with_iso3)
 
+###########################################################
+#### 1.2. Verify that the imported data is as expected ####
+###########################################################
+
+def invalid_data_import(wdpa_df, input_fields):
+    '''
+    Return True if the WDPA feature class attribute table does not 
+    contain all expected fields, or are not in the correct order.
+    '''
+
+    return list(wdpa_df) != input_fields
+
 #######################################
 #### 2. Utility & hardcoded checks ####
 #######################################
