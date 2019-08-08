@@ -4,7 +4,7 @@ Author: Stijn den Haan
 Supervisor: Yichuan Shi
 Bioinformatics internship • UNEP-WCMC • 10 June --- 9 August 2019
 
-### Definitions
+## Definitions ##
 
 **Offending fields** are fields (columns) that contain values that do not adhere to the rules set in the WDPA manual.
 - Offending fields are subdivided in **three types**:
@@ -25,7 +25,7 @@ In this document, we use:
 ##### 0. Load packages and WDPA fields ####
 ###########################################
 
-## Load packages
+#### Load packages ####
 
 import numpy as np
 import pandas as pd
@@ -36,7 +36,7 @@ import re
 
 #### Load fields present in the WDPA tables ####
 
-## Polygon data
+# Polygon data
 
 INPUT_FIELDS_POLY = ['WDPAID', 'WDPA_PID', 'PA_DEF', 'NAME', 'ORIG_NAME', 'DESIG', 
                      'DESIG_ENG', 'DESIG_TYPE', 'IUCN_CAT', 'INT_CRIT', 'MARINE', 'REP_M_AREA', 
@@ -44,7 +44,7 @@ INPUT_FIELDS_POLY = ['WDPAID', 'WDPA_PID', 'PA_DEF', 'NAME', 'ORIG_NAME', 'DESIG
                      'GOV_TYPE', 'OWN_TYPE', 'MANG_AUTH', 'MANG_PLAN', 'VERIF', 'METADATAID', 'SUB_LOC', 
                      'PARENT_ISO3', 'ISO3', ]
 
-## Point data
+# Point data
 
 INPUT_FIELDS_PT = ['WDPAID', 'WDPA_PID', 'PA_DEF', 'NAME', 'ORIG_NAME', 'DESIG', 
                       'DESIG_ENG', 'DESIG_TYPE', 'IUCN_CAT', 'INT_CRIT', 'MARINE', 'REP_M_AREA', 
@@ -52,7 +52,7 @@ INPUT_FIELDS_PT = ['WDPAID', 'WDPA_PID', 'PA_DEF', 'NAME', 'ORIG_NAME', 'DESIG',
                       'OWN_TYPE', 'MANG_AUTH', 'MANG_PLAN', 'VERIF', 'METADATAID', 'SUB_LOC', 
                       'PARENT_ISO3', 'ISO3', ]
 
-## Source Table
+# Source Table
 
 INPUT_FIELDS_META = ['METADATAID','DATA_TITLE','RESP_PARTY','VERIFIER','YEAR',
                        'UPDATE_YR', 'LANGUAGE','CHAR_SET','REF_SYSTEM', 'SCALE', 
@@ -113,11 +113,11 @@ iso3_df = pd.read_csv(url, usecols = column_with_iso3)
 
 def find_wdpa_rows(wdpa_df, wdpa_pid):
     '''
-    Return a subset of dataframe based on wdpa_pid list
+    Return a subset of DataFrame based on wdpa_pid list
 
-    Arguments:
-    wdpa_df -- wdpa dataframe
-    wdpa_pid -- a list of WDPA_PID
+    ## Arguments ##
+    wdpa_df --  wdpa DataFrame
+    wdpa_pid -- a list of WDPA_PIDs
     '''
     
     return wdpa_df[wdpa_df['WDPA_PID'].isin(wdpa_pid)]
@@ -899,10 +899,10 @@ def invalid_value_in_field(wdpa_df, field, field_allowed_values, condition_field
 
     ## Arguments ##
     
-    field                -- the field to be checked for invalid values, in a list
-    field_allowed_values -- a list of expected values in each field, case sensitive
-    condition_field      -- a constraint of another field for evaluating 
-                            invalid values, in list; leave "" if no condition specified
+    field                -- a string specifying the field to be checked
+    field_allowed_values -- a list of expected values in each field
+    condition_field      -- a list with another field on which the evaluation of 
+                            invalid values depends; leave "" if no condition specified
     condition_crit       -- a list of values for which the condition_field 
                             needs to be evaluated; leave [] if no condition specified
 
@@ -918,11 +918,11 @@ def invalid_value_in_field(wdpa_df, field, field_allowed_values, condition_field
         return_pid=True):
     '''
 
-    # in condition specified
+    # if condition_field and condition_crit are specified
     if condition_field != '' and condition_crit != []:
         invalid_wdpa_pid = wdpa_df[(~wdpa_df[field].isin(field_allowed_values)) & (wdpa_df[condition_field].isin(condition_crit))]['WDPA_PID'].values
 
-    # If no condition_field and condition_crit are specified
+    # If condition_field and condition_crit are not specified
     else:
         invalid_wdpa_pid = wdpa_df[~wdpa_df[field].isin(field_allowed_values)]['WDPA_PID'].values
             
@@ -1348,7 +1348,6 @@ def invalid_parent_iso3(wdpa_df, return_pid=False):
 ############################
 #### 4.21. Invalid ISO3 ####
 ############################
-# AP: could be improved by separating the ISO3s by `;` and then check.
 
 def invalid_iso3(wdpa_df, return_pid=False):
     '''
