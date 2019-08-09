@@ -6,14 +6,20 @@ Bioinformatics internship • UNEP-WCMC • 10 June --- 9 August 2019
 
 ## Definitions ##
 
-**Offending fields** are fields (columns) that contain values that do not adhere to the rules set in the WDPA manual.
-- Offending fields are subdivided in **three types**:
-    - *Duplicate*: records holding exactly the same values for all fields. Notably, the WDPA_PID field should not hold duplicates.
-    - *Inconsistent*: multiple records (rows) about the same protected area contains conflicting field information
+**Offending fields** are fields (columns) that contain values that do not adhere to the rules set in the WDPA manual or
+do not adhere to general logical rules, e.g. the marine area of the protected area being larger than the total protected area.
+- Offending fields are subdivided into several types:
+    - *Duplicate*: records holding exactly the same values for all fields. Notably, the WDPA_PID field should not contain duplicates.
+    - *Inconsistent*: multiple records (rows) about the same protected area (same WDPAID) contain conflicting field information
         - Example: records with the same `WDPAID` have different values present in field `NAME`, e.g. 'De Veluwe' vs 'De VeLUwe'.
     - *Invalid*: a record has an incorrect value for a particular field where only a particular set of values is allowed.
         - Example: `DESIG_TYPE` = 'Individual' while only 'National', 'International', and 'Regional' are allowed values for this field.
-    
+    - *Area invalid*: a record has an incorrect value for one or several area fields. 
+        - Example: `GIS_M_AREA` is larger than `GIS_AREA`.
+    - *Forbidden character*: a record contains a field that has a forbidden character. These can affect downstream analyses on the WDPA.
+        - Example: asterisk ('*') present in `NAME`.
+    - *NaN values*: a record contains a field that is NA, NaN, or None.
+
 In this document, we use:
 - **field** to refer to a column of the database;
     - Example: `ISO3`
@@ -103,17 +109,6 @@ column_with_iso3 = ['alpha-3']
 url = 'https://raw.githubusercontent.com/lukes/ISO-3166-Countries-with-Regional-Codes/master/all/all.csv'
 iso3_df = pd.read_csv(url, usecols = column_with_iso3)
 
-###########################################################
-#### 1.2. Verify that the imported data is as expected ####
-###########################################################
-
-def invalid_data_import(wdpa_df, input_fields):
-    '''
-    Return True if the WDPA feature class attribute table does not 
-    contain all expected fields, or are not in the correct order.
-    '''
-
-    return list(wdpa_df) != input_fields
 
 #######################################
 #### 2. Utility & hardcoded checks ####
@@ -157,7 +152,8 @@ def duplicate_wdpa_pid(wdpa_df, return_pid=False):
 
 def area_invalid_marine(wdpa_df, return_pid=False):
     '''
-    Assign a marine_value based on GIS calculations, return True if marine_value is unequal to MARINE
+    Assign a new 'MARINE' value based on GIS calculations, called marine_GIS_value
+    Return True if marine_GIS_value is unequal to MARINE
     Return list of WDPA_PIDs where MARINE is invalid, if return_pid is set True
     '''
     
@@ -168,7 +164,7 @@ def area_invalid_marine(wdpa_df, return_pid=False):
     # create new column with proportion marine vs total GIS area 
     wdpa_df['marine_GIS_proportion'] = wdpa_df['GIS_M_AREA'] / wdpa_df['GIS_AREA']
     
-    def assign_marine_value(wdpa_df):
+    def assign_marine_gis_value(wdpa_df):
         if wdpa_df['marine_GIS_proportion'] <= coast_min:
             return '0'
         elif coast_min < wdpa_df['marine_GIS_proportion'] < coast_max:
@@ -177,7 +173,7 @@ def area_invalid_marine(wdpa_df, return_pid=False):
             return '2'
     
     # calculate the marine_value
-    wdpa_df['marine_GIS_value'] = wdpa_df.apply(assign_marine_value, axis=1)
+    wdpa_df['marine_GIS_value'] = wdpa_df.apply(assign_marine_gis_value, axis=1)
     
     # find invalid WDPA_PIDs
     invalid_wdpa_pid = wdpa_df[wdpa_df['marine_GIS_value'] != wdpa_df['MARINE']]['WDPA_PID'].values
@@ -197,7 +193,7 @@ def area_invalid_too_large_gis(wdpa_df, return_pid=False):
     Return list of WDPA_PIDs where GIS_AREA is too large compared to REP_AREA, if return_pid=True
     '''
     
-    # Set maximum allowed absolute difference between GIS_AREA and REP_AREA (in km2)
+    # Set maximum allowed absolute difference between GIS_AREA and REP_AREA (in km²)
     MAX_ALLOWED_SIZE_DIFF_KM2 = 50
 
     # Create two Series:
@@ -239,7 +235,7 @@ def area_invalid_too_large_rep(wdpa_df, return_pid=False):
     Return list of WDPA_PIDs where REP_AREA is too large compared to GIS_AREA, if return_pid=True
     '''
     
-    # Set maximum allowed absolute difference between GIS_AREA and REP_AREA (in km2)
+    # Set maximum allowed absolute difference between GIS_AREA and REP_AREA (in km²)
     MAX_ALLOWED_SIZE_DIFF_KM2 = 50
 
     # Create two Series:
@@ -281,7 +277,7 @@ def area_invalid_too_large_gis_m(wdpa_df, return_pid=False):
     Return list of WDPA_PIDs where GIS_M_AREA is too large compared to REP_M_AREA, if return_pid=True
     '''
     
-    # Set maximum allowed absolute difference between GIS_M_AREA and REP_M_AREA (in km2)
+    # Set maximum allowed absolute difference between GIS_M_AREA and REP_M_AREA (in km²)
     MAX_ALLOWED_SIZE_DIFF_KM2 = 50
 
     # Create two Series:
@@ -323,7 +319,7 @@ def area_invalid_too_large_rep_m(wdpa_df, return_pid=False):
     Return list of WDPA_PIDs where REP_M_AREA is too large compared to GIS_M_AREA, if return_pid=True
     '''
     
-    # Set maximum allowed absolute difference between GIS_M_AREA and REP_M_AREA (in km2)
+    # Set maximum allowed absolute difference between GIS_M_AREA and REP_M_AREA (in km²)
     MAX_ALLOWED_SIZE_DIFF_KM2 = 50
     
     # Create two Series:
@@ -1166,7 +1162,6 @@ def invalid_marine(wdpa_df, return_pid=False):
 def invalid_no_take_marine0(wdpa_df, return_pid=False):
     '''
     Return True if NO_TAKE is not equal to 'Not Applicable' and MARINE = 0
-    Test whether terrestrial PAs (MARINE = 0) have a NO_TAKE other than 'Not Applicable'
     Return list of WDPA_PIDs where NO_TAKE is invalid, if return_pid is set True
     '''
 
@@ -1201,8 +1196,7 @@ def invalid_no_take_marine12(wdpa_df, return_pid=False):
 
 def invalid_no_tk_area_marine(wdpa_df, return_pid=False):
     '''
-    Return True if NO_TK_AREA is not in [0] while MARINE = [0]
-    I.e. check whether NO_TK_AREA is unequal to 0 for terrestrial PAs.
+    Return True if NO_TK_AREA is unequal to 0 while MARINE = 0
     Return list of WDPA_PIDs where NO_TAKE is invalid, if return_pid is set True
     '''
 
@@ -1219,7 +1213,7 @@ def invalid_no_tk_area_marine(wdpa_df, return_pid=False):
 
 def invalid_no_tk_area_no_take(wdpa_df, return_pid=False):
     '''
-    Return True if NO_TK_AREA is not in [0] while NO_TAKE = 'Not Applicable'
+    Return True if NO_TK_AREA is unequal to 0 while NO_TAKE = 'Not Applicable'
     Return list of WDPA_PIDs where NO_TK_AREA is invalid, if return_pid is set True
     '''
 
@@ -1236,7 +1230,8 @@ def invalid_no_tk_area_no_take(wdpa_df, return_pid=False):
 
 def invalid_status(wdpa_df, return_pid=False):
     '''
-    Return True if STATUS is not in ["Proposed", "Inscribed", "Adopted", "Designated", "Established"]
+    Return True if STATUS is unequal to any of the following allowed values:
+    ["Proposed", "Inscribed", "Adopted", "Designated", "Established"]
     Return list of WDPA_PIDs where STATUS is invalid, if return_pid is set True
     '''
 
@@ -1424,8 +1419,8 @@ def area_invalid_size(wdpa_df, field_small_area, field_large_area, return_pid=Fa
     size_threshold = 1.0001 # due to the rounding of numbers, there are many false positives without a threshold.
 
     if field_small_area and field_large_area:
-        invalid_wdpa_pid = wdpa_df[wdpa_df[field_small_area[0]] > 
-                                 (size_threshold*wdpa_df[field_large_area[0]])]['WDPA_PID'].values
+        invalid_wdpa_pid = wdpa_df[wdpa_df[field_small_area] > 
+                                 (size_threshold*wdpa_df[field_large_area])]['WDPA_PID'].values
 
     else:
         raise Exception('ERROR: field(s) to test is (are) not specified')
@@ -1445,8 +1440,8 @@ def area_invalid_no_tk_area_rep_m_area(wdpa_df, return_pid=False):
     Return list of WDPA_PIDs where NO_TK_AREA is larger than REP_M_AREA if return_pid=True
     '''
     
-    field_small_area = ['NO_TK_AREA']
-    field_large_area = ['REP_M_AREA']
+    field_small_area = 'NO_TK_AREA'
+    field_large_area = 'REP_M_AREA'
     
     return area_invalid_size(wdpa_df, field_small_area, field_large_area, return_pid)
 
@@ -1460,8 +1455,8 @@ def area_invalid_no_tk_area_gis_m_area(wdpa_df, return_pid=False):
     Return list of WDPA_PIDs where NO_TK_AREA is larger than GIS_M_AREA if return_pid=True
     '''
     
-    field_small_area = ['NO_TK_AREA']
-    field_large_area = ['GIS_M_AREA']
+    field_small_area = 'NO_TK_AREA'
+    field_large_area = 'GIS_M_AREA'
     
     return area_invalid_size(wdpa_df, field_small_area, field_large_area, return_pid)
 
@@ -1475,8 +1470,8 @@ def area_invalid_gis_m_area_gis_area(wdpa_df, return_pid=False):
     Return list of WDPA_PIDs where GIS_M_AREA is larger than GIS_AREA, if return_pid=True
     '''
     
-    field_small_area = ['GIS_M_AREA']
-    field_large_area = ['GIS_AREA']
+    field_small_area = 'GIS_M_AREA'
+    field_large_area = 'GIS_AREA'
 
     return area_invalid_size(wdpa_df, field_small_area, field_large_area, return_pid)
 
@@ -1490,8 +1485,8 @@ def area_invalid_rep_m_area_rep_area(wdpa_df, return_pid=False):
     Return list of WDPA_PIDs where REP_M_AREA is larger than REP_AREA, if return_pid=True
     '''
     
-    field_small_area = ['REP_M_AREA']
-    field_large_area = ['REP_AREA']
+    field_small_area = 'REP_M_AREA'
+    field_large_area = 'REP_AREA'
     
     return area_invalid_size(wdpa_df, field_small_area, field_large_area, return_pid)
 	
@@ -1508,7 +1503,7 @@ def forbidden_character(wdpa_df, check_field, return_pid=False):
     functions are to give information on which fields to check and pull 
     from the DataFrame. This function is the foundation of the others.
     
-    Return True if forbidden characters are found in the DataFrame
+    Return True if forbidden characters (specified below) are found in the DataFrame
 
     Return list of WDPA_PID where forbidden characters occur, if 
     return_pid is set True
@@ -1801,9 +1796,11 @@ def nan_present_sub_loc(wdpa_df, return_pid=False):
 
     return nan_present(wdpa_df, check_field, return_pid)
 
-##############################################
-#### 8. METADATAID: WDPA and Source Table ####
-##############################################
+
+
+#################################################################
+#### 8. METADATAID: WDPA and Source Table (on the Wish List) ####
+#################################################################
 
 #######################################################################
 #### 8.1. Invalid: METADATAID present in WDPA, not in Source Table ####
@@ -1871,7 +1868,7 @@ core_checks = [
 {'name': 'zero_rep_m_area_marine12', 'func': area_invalid_rep_m_area_marine12},
 {'name': 'ivd_rep_m_area_gt_rep_area', 'func': area_invalid_rep_m_area_rep_area},
 {'name': 'ivd_no_tk_area_gt_rep_m_area', 'func': area_invalid_no_tk_area_rep_m_area},
-{'name': 'ivd_no_tk_area_rep_m_area', 'func': invalid_no_take_no_tk_area_rep_m_area},
+{'name': 'no_tk_area_rep_m_area', 'func': invalid_no_take_no_tk_area_rep_m_area},
 {'name': 'ivd_int_crit_desig_eng_other', 'func': invalid_int_crit_desig_eng_other},
 {'name': 'ivd_desig_eng_iucn_cat_other', 'func': invalid_desig_eng_iucn_cat_other},
 {'name': 'dif_name_same_id', 'func': inconsistent_name_same_wdpaid},
@@ -1905,7 +1902,7 @@ core_checks = [
 {'name': 'ivd_marine', 'func': invalid_marine},
 {'name': 'check_no_take_marine0', 'func': invalid_no_take_marine0},
 {'name': 'ivd_no_take_marine12', 'func': invalid_no_take_marine12},
-{'name': 'ivd_no_tk_area_marine', 'func': invalid_no_tk_area_marine},
+{'name': 'no_tk_area_marine', 'func': invalid_no_tk_area_marine},
 {'name': 'ivd_no_tk_area_no_take', 'func': invalid_no_tk_area_no_take},
 {'name': 'ivd_status', 'func': invalid_status},
 {'name': 'ivd_status_yr', 'func': invalid_status_yr},
@@ -1939,7 +1936,7 @@ area_checks = [
 {'name': 'no_tk_area_gt_gis_m_area', 'func': area_invalid_no_tk_area_gis_m_area},
 {'name': 'ivd_gis_m_area_gt_gis_area', 'func': area_invalid_gis_m_area_gis_area},
 {'name': 'zero_gis_m_area_marine12', 'func': area_invalid_gis_m_area_marine12},
-{'name': 'wrong_marine', 'func': area_invalid_marine},]
+{'name': 'ivd_marine_designation', 'func': area_invalid_marine},]
 
 poly_checks = core_checks + area_checks
 pt_checks = core_checks
