@@ -1,7 +1,7 @@
 # Load packages and modules
 import sys, arcpy
-from wdpa.qas import arcgis_table_to_df, find_wdpa_rows, pt_checks, INPUT_FIELDS_PT
-from wdpa.stijn import output_errors_to_excel
+from wdpa.qa import arcgis_table_to_df, find_wdpa_rows, pt_checks, INPUT_FIELDS_PT
+from wdpa.export import output_errors_to_excel
 
 # Load input
 input_pt = sys.argv[1]
