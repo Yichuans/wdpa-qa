@@ -16,7 +16,7 @@ poly_df = arcgis_table_to_df(input_poly, INPUT_FIELDS_POLY)
 result = dict()
 
 # Run the checks
-arcpy.AddMessage('--- Running QA checks ---')
+arcpy.AddMessage('--- Running QA checks on Polygons ---')
 for poly_check in poly_checks: # poly_checks is a dictionary with checks' descriptive names and function names
     arcpy.AddMessage('Running:' + poly_check['name'])
     # checks are not currently optimised, thus return all pids regardless
