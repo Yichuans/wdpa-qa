@@ -1,4 +1,4 @@
-# import package
+# Load packages
 import os
 import datetime
 from openpyxl import Workbook
