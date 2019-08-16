@@ -1,4 +1,20 @@
-# Load packages
+###################################################################################
+#### RAMBO: a Quality Assurance Tool for the World Database on Protected Areas ####
+#### Python script to export the QA results to Excel                           ####
+###################################################################################
+
+'''
+Author: Stijn den Haan
+Supervisor: Yichuan Shi
+Bioinformatics internship • UNEP-WCMC • 10 June - 9 August 2019
+
+This Python script is to export the results of RAQTOW, the WDPA QA tool, to an Excel workbook.
+'''
+
+#######################
+#### Load packages ####
+#######################
+
 import os
 import datetime
 from openpyxl import Workbook
@@ -7,6 +23,10 @@ from openpyxl.utils.dataframe import dataframe_to_rows
 from openpyxl.formatting import Rule
 from openpyxl.styles import Font, PatternFill, Border
 from openpyxl.styles.differential import DifferentialStyle
+
+##########################################
+#### Function: output errors to Excel ####
+##########################################
 
 def output_errors_to_excel(result, outpath, checks, datatype):
     '''
@@ -132,3 +152,7 @@ def output_errors_to_excel(result, outpath, checks, datatype):
     # Save the workbook
     wb.save(output)
     return
+
+#######################
+#### END OF SCRIPT ####
+#######################
