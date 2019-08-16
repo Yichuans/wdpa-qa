@@ -1,12 +1,20 @@
-#### QA for WDPA 2019 ####
+###################################################################################
+#### RAMBO: a Quality Assurance Tool for the World Database on Protected Areas ####
+#### Python script containing all quality assurance checks for the WDPA        ####
+###################################################################################
+
 '''
 Author: Stijn den Haan
 Supervisor: Yichuan Shi
-Bioinformatics internship • UNEP-WCMC • 10 June --- 9 August 2019
+Bioinformatics internship • UNEP-WCMC • 10 June - 9 August 2019
+
+This Python script contains all quality assurance checks for the WDPA that are part of RAQTOW.
+These checks are subsequently called by the 'main' scripts poly.py and point.py, 
+to execute the checks on the WDPA feature class attribute table provided.
 
 ## Definitions ##
 
-**Offending fields** are fields (columns) that contain values that do not adhere to the rules set in the WDPA manual or
+**Offending fields** are WDPA fields (columns) that contain values that do not adhere to the rules set in the WDPA manual or
 do not adhere to general logical rules, e.g. the marine area of the protected area being larger than the total protected area.
 - Offending fields are subdivided into several types:
     - *Duplicate*: records holding exactly the same values for all fields. Notably, the WDPA_PID field should not contain duplicates.
@@ -18,7 +26,7 @@ do not adhere to general logical rules, e.g. the marine area of the protected ar
         - Example: `GIS_M_AREA` is larger than `GIS_AREA`.
     - *Forbidden character*: a record contains a field that has a forbidden character. These can affect downstream analyses on the WDPA.
         - Example: asterisk ('*') present in `NAME`.
-    - *NaN values*: a record contains a field that is NA, NaN, or None.
+    - *NaN values*: a record contains a field that is NA, NaN, or None, which can be the result of e.g. division by zero.
 
 In this document, we use:
 - **field** to refer to a column of the database;
@@ -109,10 +117,16 @@ column_with_iso3 = ['alpha-3']
 url = 'https://raw.githubusercontent.com/lukes/ISO-3166-Countries-with-Regional-Codes/master/all/all.csv'
 iso3_df = pd.read_csv(url, usecols = column_with_iso3)
 
-
 #######################################
 #### 2. Utility & hardcoded checks ####
 #######################################
+
+'''
+The utility returns a subset of the WDPA DataFrame based on a list of WDPA_PIDs provided.
+The hardcoded checks are not Factory Functions that can handle different inputs. Instead,
+these are specific checks that have a set of input variables that cannot change.
+
+'''
 
 #############################################################################
 #### 2.0. Utility to extract rows from the WDPA, based on WDPA_PID input ####
@@ -529,17 +543,20 @@ def invalid_desig_eng_iucn_cat_other(wdpa_df, return_pid=False):
 #### 3. Find inconsistent fields for the same WDPAID ####
 #########################################################
 
-#### Parent function ####
+#### Factory Function ####
 
 def inconsistent_fields_same_wdpaid(wdpa_df, 
                                         check_field, 
                                         return_pid=False):
     '''
-    Factory of functions: this generic function is to be linked to
-    the family of 'inconsistent' functions stated below. These latter 
+    Factory Function: this generic function is to be linked to
+    the family of 'inconsistent' input functions stated below. These latter 
     functions are to give information on which fields to check and pull 
     from the DataFrame. This function is the foundation of the others.
     
+    This function checks the WDPA for inconsistent values and 
+    returns a list of WDPA_PIDs that have invalid values for the specified field(s).
+
     Return True if inconsistent Fields are found for rows 
     sharing the same WDPAID
 
@@ -569,8 +586,7 @@ def inconsistent_fields_same_wdpaid(wdpa_df,
     # Sum the number of times a WDPAID has more than 1 value for a field
     return (wdpa_df.groupby('WDPAID')[check_field].nunique() > 1).sum() > 0
 	
-
-#### Child functions ####
+#### Input functions ####
 
 #################################
 #### 3.1. Inconsistent NAME #####
@@ -587,7 +603,7 @@ def inconsistent_name_same_wdpaid(wdpa_df, return_pid=False):
 
     check_field = 'NAME'
     
-    # The command below loads the parent function
+    # The command below loads the factory function
     # and adds the check_field and return_pid arguments in it
     # to evaluate the wdpa_df for these arguments
     return inconsistent_fields_same_wdpaid(wdpa_df, check_field, return_pid)
@@ -660,25 +676,9 @@ def inconsistent_desig_type_same_wdpaid(wdpa_df, return_pid=False):
     
     return inconsistent_fields_same_wdpaid(wdpa_df, check_field, return_pid)
 
-####################################
-#### 3.6. Inconsistent IUCN_CAT ####
-####################################
-
-def inconsistent_iucn_cat_same_wdpaid(wdpa_df, return_pid=False):
-    '''
-    This function is to capture inconsistencies in the field 'IUCN_CAT'
-    for records with the same WDPAID
-    
-    Input: WDPA in pandas DataFrame 
-    Output: list with WDPA_PIDs containing field inconsistencies
-    '''
-
-    check_field = 'IUCN_CAT'
-    
-    return inconsistent_fields_same_wdpaid(wdpa_df, check_field, return_pid)
 
 ####################################
-#### 3.7. Inconsistent INT_CRIT ####
+#### 3.6. Inconsistent INT_CRIT ####
 ####################################
 
 def inconsistent_int_crit_same_wdpaid(wdpa_df, return_pid=False):
@@ -695,7 +695,7 @@ def inconsistent_int_crit_same_wdpaid(wdpa_df, return_pid=False):
     return inconsistent_fields_same_wdpaid(wdpa_df, check_field, return_pid)
 
 ###################################
-#### 3.8. Inconsistent NO_TAKE ####
+#### 3.7. Inconsistent NO_TAKE ####
 ###################################
 
 def inconsistent_no_take_same_wdpaid(wdpa_df, return_pid=False):
@@ -711,7 +711,7 @@ def inconsistent_no_take_same_wdpaid(wdpa_df, return_pid=False):
     return inconsistent_fields_same_wdpaid(wdpa_df, check_field, return_pid)
 
 ##################################
-#### 3.9. Inconsistent STATUS ####
+#### 3.8. Inconsistent STATUS ####
 ##################################
 
 def inconsistent_status_same_wdpaid(wdpa_df, return_pid=False):
@@ -726,9 +726,9 @@ def inconsistent_status_same_wdpaid(wdpa_df, return_pid=False):
 
     return inconsistent_fields_same_wdpaid(wdpa_df, check_field, return_pid)
 
-######################################
-#### 3.10. Inconsistent STATUS_YR ####
-######################################
+#####################################
+#### 3.9. Inconsistent STATUS_YR ####
+#####################################
 
 def inconsistent_status_yr_same_wdpaid(wdpa_df, return_pid=False):
     '''
@@ -743,7 +743,7 @@ def inconsistent_status_yr_same_wdpaid(wdpa_df, return_pid=False):
     return inconsistent_fields_same_wdpaid(wdpa_df, check_field, return_pid)
 
 #####################################
-#### 3.11. Inconsistent GOV_TYPE ####
+#### 3.10. Inconsistent GOV_TYPE ####
 #####################################
 
 def inconsistent_gov_type_same_wdpaid(wdpa_df, return_pid=False):
@@ -759,7 +759,7 @@ def inconsistent_gov_type_same_wdpaid(wdpa_df, return_pid=False):
     return inconsistent_fields_same_wdpaid(wdpa_df, check_field, return_pid)
 
 #####################################
-#### 3.12. Inconsistent OWN_TYPE ####
+#### 3.11. Inconsistent OWN_TYPE ####
 #####################################
 
 def inconsistent_own_type_same_wdpaid(wdpa_df, return_pid=False):
@@ -775,7 +775,7 @@ def inconsistent_own_type_same_wdpaid(wdpa_df, return_pid=False):
     return inconsistent_fields_same_wdpaid(wdpa_df, check_field, return_pid)
 
 ######################################
-#### 3.13. Inconsistent MANG_AUTH ####
+#### 3.12. Inconsistent MANG_AUTH ####
 ######################################
 
 def inconsistent_mang_auth_same_wdpaid(wdpa_df, return_pid=False):
@@ -792,7 +792,7 @@ def inconsistent_mang_auth_same_wdpaid(wdpa_df, return_pid=False):
     return inconsistent_fields_same_wdpaid(wdpa_df, check_field, return_pid)
 
 ######################################
-#### 3.14. Inconsistent MANG_PLAN ####
+#### 3.13. Inconsistent MANG_PLAN ####
 ######################################
 
 def inconsistent_mang_plan_same_wdpaid(wdpa_df, return_pid=False):
@@ -808,7 +808,7 @@ def inconsistent_mang_plan_same_wdpaid(wdpa_df, return_pid=False):
     return inconsistent_fields_same_wdpaid(wdpa_df, check_field, return_pid)
 
 ##################################
-#### 3.15. Inconsistent VERIF ####
+#### 3.14. Inconsistent VERIF ####
 ##################################
 
 def inconsistent_verif_same_wdpaid(wdpa_df, return_pid=False):
@@ -824,7 +824,7 @@ def inconsistent_verif_same_wdpaid(wdpa_df, return_pid=False):
     return inconsistent_fields_same_wdpaid(wdpa_df, check_field, return_pid)
 
 #######################################
-#### 3.16. Inconsistent METADATAID ####
+#### 3.15. Inconsistent METADATAID ####
 #######################################
 
 def inconsistent_metadataid_same_wdpaid(wdpa_df, return_pid=False):
@@ -839,9 +839,9 @@ def inconsistent_metadataid_same_wdpaid(wdpa_df, return_pid=False):
 
     return inconsistent_fields_same_wdpaid(wdpa_df, check_field, return_pid)
 
-###################################
-#### 3.17 Inconsistent SUB_LOC ####
-###################################
+####################################
+#### 3.16. Inconsistent SUB_LOC ####
+####################################
 
 def inconsistent_sub_loc_same_wdpaid(wdpa_df, return_pid=False):
     '''
@@ -856,7 +856,7 @@ def inconsistent_sub_loc_same_wdpaid(wdpa_df, return_pid=False):
     return inconsistent_fields_same_wdpaid(wdpa_df, check_field, return_pid)
 
 #######################################
-### 3.18. Inconsistent PARENT_ISO3 ####
+### 3.17. Inconsistent PARENT_ISO3 ####
 #######################################
 
 def inconsistent_parent_iso3_same_wdpaid(wdpa_df, return_pid=False):
@@ -871,9 +871,9 @@ def inconsistent_parent_iso3_same_wdpaid(wdpa_df, return_pid=False):
 
     return inconsistent_fields_same_wdpaid(wdpa_df, check_field, return_pid)
 
-################################
-#### 3.19 Inconsistent ISO3 ####
-################################
+#################################
+#### 3.18. Inconsistent ISO3 ####
+#################################
 
 
 def inconsistent_iso3_same_wdpaid(wdpa_df, return_pid=False):
@@ -892,18 +892,21 @@ def inconsistent_iso3_same_wdpaid(wdpa_df, return_pid=False):
 #### 4. Find invalid values in fields ####
 ##########################################
 
-#### Parent function ####
+#### Factory Function ####
 
 def invalid_value_in_field(wdpa_df, field, field_allowed_values, condition_field, condition_crit, return_pid=False):
     '''
+    Factory Function: this generic function is to be linked to
+    the family of 'invalid' input functions stated below. These latter 
+    functions are to give information on which fields to check and pull 
+    from the DataFrame. This function is the foundation of the others.
+    
     This function checks the WDPA for invalid values and returns a list of WDPA_PIDs 
     that have invalid values for the specified field(s).
+            
+    Return True if invalid values are found in specified fields.
     
-    This function is to be linked to the family of 'invalid field'-checking functions. 
-    These latter functions give specific information on the fields to be checked, and how.
-        
-    Return True if invalid values are found in specified fields
-    Return list of WDPA_PIDs with invalid fields, if return_pid is set True
+    Return list of WDPA_PIDs with invalid fields, if return_pid is set True.
 
     ## Arguments ##
     
@@ -920,7 +923,7 @@ def invalid_value_in_field(wdpa_df, field, field_allowed_values, condition_field
         field="DESIG_ENG",
         field_allowed_values=["Ramsar Site, Wetland of International Importance", 
                               "UNESCO-MAB Biosphere Reserve", 
-                              "World Heritage Site (natural or mixed)],
+                              "World Heritage Site (natural or mixed)"],
         condition_field="DESIG_TYPE",
         condition_crit=["International"],
         return_pid=True):
@@ -939,8 +942,8 @@ def invalid_value_in_field(wdpa_df, field, field_allowed_values, condition_field
         return invalid_wdpa_pid
     
     return len(invalid_wdpa_pid) > 0
-	
-#### Child functions ####
+
+#### Input functions ####
 
 #############################
 #### 4.1. Invalid PA_DEF ####
@@ -1194,7 +1197,7 @@ def invalid_no_take_marine12(wdpa_df, return_pid=False):
 #### 4.13. Invalid NO_TK_AREA & MARINE ####
 ###########################################
 
-def invalid_no_tk_area_marine(wdpa_df, return_pid=False):
+def invalid_no_tk_area_marine0(wdpa_df, return_pid=False):
     '''
     Return True if NO_TK_AREA is unequal to 0 while MARINE = 0
     Return list of WDPA_PIDs where NO_TAKE is invalid, if return_pid is set True
@@ -1248,13 +1251,13 @@ def invalid_status(wdpa_df, return_pid=False):
 
 def invalid_status_yr(wdpa_df, return_pid=False):
     '''
-    Return True if STATUS_YR is unequal to 0 or any year between 1819 and the current year
+    Return True if STATUS_YR is unequal to 0 or any year between 1750 and the current year
     Return list of WDPA_PIDs where STATUS_YR is invalid, if return_pid is set True
     '''
     
     field = 'STATUS_YR'
     year = datetime.date.today().year # obtain current year
-    yearArray = [0] + np.arange(1819, year + 1, 1).tolist() # make a list of all years, from 0 to current year
+    yearArray = [0] + np.arange(1750, year + 1, 1).tolist() # make a list of all years, from 0 to current year
     field_allowed_values = [str(x) for x in yearArray] # change all integers to strings
     condition_field = ''
     condition_crit = []
@@ -1337,7 +1340,6 @@ def invalid_verif(wdpa_df, return_pid=False):
 ###################################
 #### 4.20. Invalid PARENT_ISO3 ####
 ###################################
-# AP: could be improved by separating the ISO3s by `;` and then check.
 
 def invalid_parent_iso3(wdpa_df, return_pid=False):
     '''
@@ -1346,7 +1348,7 @@ def invalid_parent_iso3(wdpa_df, return_pid=False):
     '''
     
     field = 'PARENT_ISO3'
-    field_allowed_values = iso3_df['alpha-3'].values
+    field_allowed_values = np.append(iso3_df['alpha-3'].values, 'ABNJ') # Add ABNJ separately to the ndarray
     condition_field = ''
     condition_crit = []
     
@@ -1390,15 +1392,18 @@ def invalid_status_desig_type(wdpa_df, return_pid=False):
 #### 5. Area invalid size: GIS or Reported area is invalid ####
 ###############################################################
 
-#### Parent function ####
+#### Factory Function ####
 
 def area_invalid_size(wdpa_df, field_small_area, field_large_area, return_pid=False):
     '''
-    Factory of functions: this generic function is to be linked to
-    the family of 'area' functions stated below. These latter 
+    Factory Function: this generic function is to be linked to
+    the family of 'area' input functions stated below. These latter 
     functions are to give information on which fields to check and pull 
     from the DataFrame. This function is the foundation of the others.
     
+    This function checks the WDPA for invalid areas and returns a list of WDPA_PIDs 
+    that have invalid values for the specified field(s).
+
     Return True if the size of the small_area is invalid compared to large_area
 
     Return list of WDPA_PIDs where small_area is invalid compared to large_area,
@@ -1429,6 +1434,8 @@ def area_invalid_size(wdpa_df, field_small_area, field_large_area, return_pid=Fa
         return invalid_wdpa_pid
     
     return len(invalid_wdpa_pid) > 0
+
+#### Input functions ####
 
 ######################################################
 #### 5.1. Area invalid: NO_TK_AREA and REP_M_AREA ####
@@ -1494,15 +1501,18 @@ def area_invalid_rep_m_area_rep_area(wdpa_df, return_pid=False):
 #### 6. Forbidden characters ####
 #################################
 
-#### Parent function ####
+#### Factory Function ####
 
 def forbidden_character(wdpa_df, check_field, return_pid=False):
     '''
-    Factory of functions: this generic function is to be linked to
-    the family of 'forbidden character' functions stated below. These latter 
+    Factory Function: this generic function is to be linked to
+    the family of 'forbidden character' input functions stated below. These latter 
     functions are to give information on which fields to check and pull 
     from the DataFrame. This function is the foundation of the others.
     
+    This function checks the WDPA for forbidden characters and returns a list of WDPA_PIDs 
+    that have invalid values for the specified field(s).
+
     Return True if forbidden characters (specified below) are found in the DataFrame
 
     Return list of WDPA_PID where forbidden characters occur, if 
@@ -1532,7 +1542,7 @@ def forbidden_character(wdpa_df, check_field, return_pid=False):
         
     return len(invalid_wdpa_pid) > 0
 
-#### Child functions ####
+#### Input functions ####
 
 #########################################
 #### 6.1. Forbidden character - NAME ####
@@ -1650,15 +1660,18 @@ def forbidden_character_sub_loc(wdpa_df, return_pid=False):
 #### 7. NaN present ####
 ########################
 
-#### Parent function ####
+#### Factory Function ####
 
 def nan_present(wdpa_df, check_field, return_pid=False):
     '''
-    Factory of functions: this generic function is to be linked to
-    the family of 'nan_present' functions stated below. These latter 
+    Factory Function: this generic function is to be linked to
+    the family of 'nan_present' input functions stated below. These latter 
     functions are to give information on which fields to check and pull 
     from the DataFrame. This function is the foundation of the others.
     
+    This function checks the WDPA for NaN / NA / None values and returns 
+    a list of WDPA_PIDs that have invalid values for the specified field(s).
+
     Return True if NaN / NA values are found in the DataFrame
 
     Return list of WDPA_PID where forbidden characters occur, if 
@@ -1681,8 +1694,7 @@ def nan_present(wdpa_df, check_field, return_pid=False):
     
     return len(invalid_wdpa_pid) > 0
 
-
-#### Child functions ####
+#### Input functions ####
 
 #################################
 #### 7.1. NaN present - NAME ####
@@ -1862,21 +1874,28 @@ def nan_present_sub_loc(wdpa_df, return_pid=False):
     
 #     return len(invalid_metadataid) > 0
 
+############################################################################################
+#### Below is a dictionary that holds all checks' descriptive (as displayed in Excel)   ####
+#### and script function names (as displayed in this script, qa.py).                    ####
+#### These checks are subsequently called by the main functions, poly.py and point.py,  ####
+#### to run all checks on the WDPA input feature class attribute table.                 ####
+############################################################################################
+
+# Checks to be run for both point and polygon data
 core_checks = [
 {'name': 'duplicate_wdpa_pid', 'func': duplicate_wdpa_pid},
 {'name': 'tiny_rep_area', 'func': area_invalid_rep_area},
 {'name': 'zero_rep_m_area_marine12', 'func': area_invalid_rep_m_area_marine12},
 {'name': 'ivd_rep_m_area_gt_rep_area', 'func': area_invalid_rep_m_area_rep_area},
 {'name': 'ivd_no_tk_area_gt_rep_m_area', 'func': area_invalid_no_tk_area_rep_m_area},
-{'name': 'no_tk_area_rep_m_area', 'func': invalid_no_take_no_tk_area_rep_m_area},
+{'name': 'ivd_no_tk_area_rep_m_area', 'func': invalid_no_take_no_tk_area_rep_m_area},
 {'name': 'ivd_int_crit_desig_eng_other', 'func': invalid_int_crit_desig_eng_other},
 {'name': 'ivd_desig_eng_iucn_cat_other', 'func': invalid_desig_eng_iucn_cat_other},
 {'name': 'dif_name_same_id', 'func': inconsistent_name_same_wdpaid},
 {'name': 'dif_orig_name_same_id', 'func': inconsistent_orig_name_same_wdpaid},
-{'name': 'dif_desig_same_id', 'func': inconsistent_desig_same_wdpaid},
-{'name': 'dif_desig_eng_same_id', 'func': inconsistent_desig_eng_same_wdpaid},
+{'name': 'ivd_dif_desig_same_id', 'func': inconsistent_desig_same_wdpaid},
+{'name': 'ivd_dif_desig_eng_same_id', 'func': inconsistent_desig_eng_same_wdpaid},
 {'name': 'dif_desig_type_same_id', 'func': inconsistent_desig_type_same_wdpaid},
-{'name': 'dif_iucn_cat_same_id', 'func': inconsistent_iucn_cat_same_wdpaid},
 {'name': 'dif_int_crit_same_id', 'func': inconsistent_int_crit_same_wdpaid},
 {'name': 'dif_no_take_same_id', 'func': inconsistent_no_take_same_wdpaid},
 {'name': 'dif_status_same_id', 'func': inconsistent_status_same_wdpaid},
@@ -1885,11 +1904,11 @@ core_checks = [
 {'name': 'dif_own_type_same_id', 'func': inconsistent_own_type_same_wdpaid},
 {'name': 'dif_mang_auth_same_id', 'func': inconsistent_mang_auth_same_wdpaid},
 {'name': 'dif_mang_plan_same_id', 'func': inconsistent_mang_plan_same_wdpaid},
-{'name': 'dif_verif_same_id', 'func': inconsistent_verif_same_wdpaid},
-{'name': 'dif_metadataid_same_id', 'func': inconsistent_metadataid_same_wdpaid},
-{'name': 'dif_sub_loc_same_id', 'func': inconsistent_sub_loc_same_wdpaid},
-{'name': 'dif_parent_iso3_same_id', 'func': inconsistent_parent_iso3_same_wdpaid},
-{'name': 'dif_iso3_same_id', 'func': inconsistent_iso3_same_wdpaid},
+{'name': 'ivd_dif_verif_same_id', 'func': inconsistent_verif_same_wdpaid},
+{'name': 'ivd_dif_metadataid_same_id', 'func': inconsistent_metadataid_same_wdpaid},
+{'name': 'ivd_dif_sub_loc_same_id', 'func': inconsistent_sub_loc_same_wdpaid},
+{'name': 'ivd_dif_parent_iso3_same_id', 'func': inconsistent_parent_iso3_same_wdpaid},
+{'name': 'ivd_dif_iso3_same_id', 'func': inconsistent_iso3_same_wdpaid},
 {'name': 'ivd_pa_def', 'func': invalid_pa_def},
 {'name': 'ivd_desig_eng_international', 'func': invalid_desig_eng_international},
 {'name': 'ivd_desig_type_international', 'func': invalid_desig_type_international},
@@ -1902,7 +1921,7 @@ core_checks = [
 {'name': 'ivd_marine', 'func': invalid_marine},
 {'name': 'check_no_take_marine0', 'func': invalid_no_take_marine0},
 {'name': 'ivd_no_take_marine12', 'func': invalid_no_take_marine12},
-{'name': 'no_tk_area_marine', 'func': invalid_no_tk_area_marine},
+{'name': 'check_no_tk_area_marine0', 'func': invalid_no_tk_area_marine},
 {'name': 'ivd_no_tk_area_no_take', 'func': invalid_no_tk_area_no_take},
 {'name': 'ivd_status', 'func': invalid_status},
 {'name': 'ivd_status_yr', 'func': invalid_status_yr},
@@ -1927,6 +1946,7 @@ core_checks = [
 {'name': 'nan_present_mang_plan', 'func': nan_present_mang_plan},
 {'name': 'nan_present_sub_loc', 'func': nan_present_sub_loc},]
 
+# Checks to be run for polygon data only (includes GIS_AREA and/or GIS_M_AREA)
 area_checks = [
 {'name': 'gis_area_gt_rep_area', 'func': area_invalid_too_large_gis},
 {'name': 'rep_area_gt_gis_area', 'func': area_invalid_too_large_rep},
@@ -1938,5 +1958,12 @@ area_checks = [
 {'name': 'zero_gis_m_area_marine12', 'func': area_invalid_gis_m_area_marine12},
 {'name': 'ivd_marine_designation', 'func': area_invalid_marine},]
 
+# Checks for polygons
 poly_checks = core_checks + area_checks
+
+# Checks for points (area checks excluded)
 pt_checks = core_checks
+
+#######################
+#### END OF SCRIPT ####
+#######################
