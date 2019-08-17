@@ -40,15 +40,18 @@ Note: installing Anaconda is not required. Refrain from using any other Conda in
 
 ## Quick start
 
-1. Download the latest WDPA QA toolbox version from this GitHub repository (folder 'QA_toolbox')
-2. Extract the file on your computer
-3. Add the QA toolbox in an ArcGIS Pro project
-4. Double-click (expand) the toolbox and open the script to run (for Point or Polygon feature class attribute tables)
-5. Specify the WDPA input feature class attribute table
-6. Specify the output folder
-7. Click 'Run'
-8. Explore the results in Excel
-9. In case you encounter errors upon running the tool, please see the Wiki page of this GitHub repository to troubleshoot
+
+1. Download RAMBO (the WDPA QA tool), from this GitHub repository.
+2. Unzip the file in a folder of your choosing.
+3. Open a (non-empty / empty) project in ArcGIS Pro.
+4. On the ribbon, select Insert --> Toolbox --> Add Toolbox.
+5. Go to the folder where you unzipped RAMBO, select the `.tbx` file (with red icon), and press 'OK'.
+6. Open the Catalog pane --> Toolboxes --> The WDPA QA toolbox should now be visible.
+7. Expand the toolbox, so that the embedded scripts become visible.
+8. Right-click the script to run (e.g. for polygons or points), click Open, and specify the input table (feature class attribute table) to be checked, and the output directory.
+9. Click Run, and click 'View Details' if you wish to see the progress.
+10. The Excel output will be present in the previously specified output directory.
+11. If you encounter errors, please refer to the Troubleshooting section in the Wiki.
 
 ---
 
