@@ -64,6 +64,7 @@ Note: installing Anaconda is not required. Refrain from using any other Conda in
 - Make the name of the input feature class a part of the Excel output's filename.
 - If useful: add function that is the `GIS_M_AREA` equivalent of `ivd_no_tk_area_rep_m_area`: flag `WDPA_PIDs` whose `NO_TAKE` value is `All`, but `NO_TK_AREA` is not the same value as `GIS_M_AREA`.
 - Add a single check for `Null` values for all fields
+- Check whether there are any duplicate `WDPA_PID`s between Points and Polygon feature class attribute tables.
 
 ---
 
