@@ -1537,6 +1537,8 @@ def forbidden_character(wdpa_df, check_field, return_pid=False):
     pattern = '|'.join(forbidden_characters_esc)
 
     # Obtain the WDPA_PIDs with forbidden characters
+    # remove those with nas
+    wdpa_df = wdpa_df.dropna()
     invalid_wdpa_pid = wdpa_df[wdpa_df[check_field].str.contains(pattern, case=False)]['WDPA_PID'].values
 
     if return_pid:
