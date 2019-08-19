@@ -104,7 +104,8 @@ def arcgis_table_to_df(in_fc, input_fields, query=''):
     data = [row for row in arcpy.da.SearchCursor(in_fc,final_fields,where_clause=query)] # for all fields, obtain all rows
     fc_dataframe = pd.DataFrame(data,columns=final_fields) # Put data into pandas DataFrame
     fc_dataframe = fc_dataframe.set_index(OIDFieldName,drop=True) # set OBJECTID as index, but no longer use it as column
-    
+    fc_dataframe.replace('', np.nan, inplace=True) # set '' to np.nan
+
     return fc_dataframe
 
 
@@ -1921,7 +1922,7 @@ core_checks = [
 {'name': 'ivd_marine', 'func': invalid_marine},
 {'name': 'check_no_take_marine0', 'func': invalid_no_take_marine0},
 {'name': 'ivd_no_take_marine12', 'func': invalid_no_take_marine12},
-{'name': 'check_no_tk_area_marine0', 'func': invalid_no_tk_area_marine},
+{'name': 'check_no_tk_area_marine0', 'func': invalid_no_tk_area_marine0},
 {'name': 'ivd_no_tk_area_no_take', 'func': invalid_no_tk_area_no_take},
 {'name': 'ivd_status', 'func': invalid_status},
 {'name': 'ivd_status_yr', 'func': invalid_status_yr},
