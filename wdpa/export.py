@@ -24,6 +24,10 @@ from openpyxl.formatting import Rule
 from openpyxl.styles import Font, PatternFill, Border
 from openpyxl.styles.differential import DifferentialStyle
 
+RED = 'F08080'
+ORANGE = 'eb8634'
+GREEN = '98FB98'
+
 ##########################################
 #### Function: output errors to Excel ####
 ##########################################
@@ -99,19 +103,20 @@ def output_errors_to_excel(result, outpath, checks, datatype):
             ws.column_dimensions['A'].width = 14 # adjust width of column A
             ws.freeze_panes = 'B2'
         # add 'Check' or 'Fail' to Summary sheet
-            if not function_name.startswith('ivd'):
+            if function_name.startswith('ivd'):
+                wb['Summary'].append([function_name,'Fail', len(result[function_name])])
+                ws.sheet_properties.tabColor = RED # fail tab
+                link = f'#{function_name}!A1' # as above
+                wb['Summary'].cell(row=find_row(function_name), column=1).hyperlink = link
+                wb['Summary'].cell(row=find_row(function_name), column=1).style = 'Hyperlink'
+            else:
                 wb['Summary'].append([function_name,'Check', len(result[function_name])])
-                ws.sheet_properties.tabColor = '87CEFA' # blue tab
+                ws.sheet_properties.tabColor = ORANGE # check tab
                 link = f'#{function_name}!A1' # create link to cell A1 of function_name tab
                 # add link to the function_name of the Summary sheet, with hyperlink style
                 wb['Summary'].cell(row=find_row(function_name), column=1).hyperlink = link 
                 wb['Summary'].cell(row=find_row(function_name), column=1).style = 'Hyperlink'
-            else:
-                wb['Summary'].append([function_name,'Fail', len(result[function_name])])
-                ws.sheet_properties.tabColor = 'F08080' # red tab
-                link = f'#{function_name}!A1' # as above
-                wb['Summary'].cell(row=find_row(function_name), column=1).hyperlink = link
-                wb['Summary'].cell(row=find_row(function_name), column=1).style = 'Hyperlink'
+ 
         # add 'Pass' to Summary sheet as no rows with invalid WDPA_PIDs are present
         else:
             wb['Summary'].append([function_name,'Pass'])
@@ -140,9 +145,9 @@ def output_errors_to_excel(result, outpath, checks, datatype):
         r.formula = [f'$B2="{summary_result}"'] # only search in Column B, starting on second row
         wb[sheetname].conditional_formatting.add(f'A2:C{wb[sheetname].max_row}', r) # apply formatting
 
-    add_conditional_formatting('87CEFA', 'Check', 'Summary') # blue
-    add_conditional_formatting('F08080', 'Fail', 'Summary') # red
-    add_conditional_formatting('98FB98', 'Pass', 'Summary') # green
+    add_conditional_formatting(ORANGE, 'Check', 'Summary') # orange
+    add_conditional_formatting(RED, 'Fail', 'Summary') # red
+    add_conditional_formatting(GREEN, 'Pass', 'Summary') # green
     
     # Extra formatting
     wb['Summary'].sheet_properties.tabColor = '000000' # black tab 
