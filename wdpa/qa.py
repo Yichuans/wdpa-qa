@@ -117,6 +117,7 @@ def arcgis_table_to_df(in_fc, input_fields, query=''):
 column_with_iso3 = ['alpha-3']
 url = 'https://raw.githubusercontent.com/lukes/ISO-3166-Countries-with-Regional-Codes/master/all/all.csv'
 iso3_df = pd.read_csv(url, usecols = column_with_iso3)
+iso3 = np.append(iso3_df['alpha-3'].values, 'ABNJ')
 
 #######################################
 #### 2. Utility & hardcoded checks ####
@@ -1341,36 +1342,36 @@ def invalid_verif(wdpa_df, return_pid=False):
 ###################################
 #### 4.20. Invalid PARENT_ISO3 ####
 ###################################
+def invalid_country_codes(wdpa_df, field, return_pid=False):
+
+    def _correct_iso3(field):
+        for each in field.split(';'):
+            if each in iso3:
+                pass
+            else:
+                return False
+
+        return True
+
+    invalid_wdpa_pid = wdpa_df[~wdpa_df[field].apply(_correct_iso3)]['WDPA_PID'].values
+
+    if return_pid:
+        return invalid_wdpa_pid
+
+    else:
+        return len(invalid_wdpa_pid) > 0
 
 def invalid_parent_iso3(wdpa_df, return_pid=False):
-    '''
-    Return True if PARENT_ISO3 is not equal to any of the allowed ISO3 values
-    Return list of WDPA_PIDs for which the PARENT_ISO3 is invalid
-    '''
-    
-    field = 'PARENT_ISO3'
-    field_allowed_values = np.append(iso3_df['alpha-3'].values, 'ABNJ') # Add ABNJ separately to the ndarray
-    condition_field = ''
-    condition_crit = []
-    
-    return invalid_value_in_field(wdpa_df, field, field_allowed_values, condition_field, condition_crit, return_pid)
+
+    return invalid_country_codes(wdpa_df, 'PARENT_ISO3', return_pid)
 
 ############################
 #### 4.21. Invalid ISO3 ####
 ############################
 
 def invalid_iso3(wdpa_df, return_pid=False):
-    '''
-    Return True if ISO3 is not equal to any of the allowed ISO3 values
-    Return list of WDPA_PIDs for which the ISO3 is invalid
-    '''
-    
-    field = 'ISO3'
-    field_allowed_values = iso3_df['alpha-3'].values
-    condition_field = ''
-    condition_crit = []
-    
-    return invalid_value_in_field(wdpa_df, field, field_allowed_values, condition_field, condition_crit, return_pid)
+
+    return invalid_country_codes(wdpa_df, 'ISO3', return_pid)
 
 ###########################################
 #### 4.22. Invalid STATUS & DESIG_TYPE ####
