@@ -27,5 +27,9 @@ class TestNull(unittest.TestCase):
     def test_mang_auth(self):
         self.assertFalse(qa.nan_present_mang_auth(wdpa_df))
 
+class TestISO3(unittest.TestCase):
+    def test_invalid_parent_iso3(self):
+        self.assertListEqual(list(qa.invalid_parent_iso3(wdpa_df, True)), [40597., 64669., 40642.])
+
 if __name__ == '__main__':
     unittest.main()
