@@ -24,9 +24,9 @@ from openpyxl.formatting import Rule
 from openpyxl.styles import Font, PatternFill, Border
 from openpyxl.styles.differential import DifferentialStyle
 
-RED = 'F08080'
-ORANGE = 'eb8634'
-GREEN = '98FB98'
+RED = 'ff0000'
+ORANGE = 'ffff00'
+GREEN = '00ff00'
 
 ##########################################
 #### Function: output errors to Excel ####
